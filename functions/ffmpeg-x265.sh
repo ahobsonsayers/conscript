@@ -1,17 +1,19 @@
+#!/bin/bash
+
 function fftvpass1() {
   if [[ $# -ne 1 ]]; then
     echo 'fftvpass1 INPUT'
   else
-    OGBITRATE=$(ffbitrate "${1}")
-    BITRATE=$(( ( OGBITRATE / 250 ) * 25 ))
-    CROP=$(ffcropheight "${1}")
+    source_bitrate=$(ffbitrate "$1")
+    target_bitrate=$(((source_bitrate / 250) * 25))
+    target_height=$(ffcropheight "$1")
     ffmpeg \
       -init_hw_device vulkan \
-      -i "${1}" \
+      -i "$1" \
       -map 0:v:0 \
       -c:v libx265 \
       -profile:v main10 \
-      -b:v "${BITRATE}k" \
+      -b:v "${target_bitrate}k" \
       -preset:v slow \
       -x265-params "
         bframes=10:
@@ -24,7 +26,7 @@ function fftvpass1() {
         pass=1
       " \
       -vf "
-        crop=iw:${CROP},
+        crop=iw:${target_height},
         hwupload,
         libplacebo=
           w=1280:h=-1:
@@ -41,7 +43,6 @@ function fftvpass1() {
       -an \
       -sn \
       -f null \
-      -progress - \
       -
   fi
 }
@@ -50,16 +51,16 @@ function fftvpass2() {
   if [[ $# -ne 2 ]]; then
     echo 'fftvpass2 INPUT OUTPUT'
   else
-    OGBITRATE=$(ffbitrate "${1}")
-    BITRATE=$(( ( OGBITRATE / 250 ) * 25 ))
-    CROP=$(ffcropheight "${1}")
+    source_bitrate=$(ffbitrate "$1")
+    target_bitrate=$(((source_bitrate / 250) * 25))
+    target_height=$(ffcropheight "$1")
     ffmpeg \
       -init_hw_device vulkan \
-      -i "${1}" \
+      -i "$1" \
       -map 0:v:0 \
       -c:v libx265 \
       -profile:v main10 \
-      -b:v "${BITRATE}k" \
+      -b:v "${target_bitrate}k" \
       -preset:v slow \
       -x265-params "
         bframes=10:
@@ -72,7 +73,7 @@ function fftvpass2() {
         pass=2
       " \
       -vf "
-        crop=iw:${CROP},
+        crop=iw:${target_height},
         hwupload,
         libplacebo=
           w=1280:h=-1:
@@ -98,14 +99,14 @@ function fftvpass2() {
       -map_metadata -1 \
       -y \
       "$2"
-    fi
+  fi
 }
 
 function fftv() {
   if [[ $# -ne 2 ]]; then
     echo 'fftv INPUT OUTPUT'
   else
-    fftvpass1 "${1}" &&
-    fftvpass2 "${1}" "${2}"
+    fftvpass1 "$1" &&
+      fftvpass2 "$1" "$2"
   fi
 }

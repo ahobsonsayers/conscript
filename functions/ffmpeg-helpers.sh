@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 # Quality Metrics
 # https://github.com/slhck/ffmpeg-quality-metrics
@@ -8,17 +8,17 @@ function ffquality {
     echo 'ffquality ORGINAL TRANSCODE'
   else
     directory=$(dirname "$2")
-    filename=$(basename -- "$2")
+    file_name=$(basename -- "$2")
     ffmpeg-quality-metrics "$2" "$1" \
       -s lanczos \
-      -m vmaf ssim psnr \
-      | jq '.global | {
+      -m vmaf ssim psnr |
+      jq '.global | {
         vmaf: .vmaf.vmaf, 
         ssim: .ssim.ssim_avg, 
         psnr: .psnr.psnr_avg, 
         mse: .psnr.mse_avg 
       }' \
-      > "${directory}/${filename%.*}.json"
+        >"${directory}/${file_name%.*}.json"
   fi
 }
 
@@ -29,13 +29,13 @@ function ffscreenshot() {
     echo 'TIMESTAMP format: H[H]:M[M]:S[S]'
   else
     directory=$(dirname "$1")
-    filename=$(basename -- "$1")
+    file_name=$(basename -- "$1")
     ffmpeg -v error \
       -ss "$2" \
       -i "$1" \
       -frames:v 1 \
       -update 1 \
-      "${directory}/${filename%.*}.png"
+      "${directory}/${file_name%.*}.png"
   fi
 }
 
@@ -45,19 +45,19 @@ function ffcut() {
     echo 'ffcut INPUT TIMESTAMP DURATION'
     echo 'TIMESTAMP and DURATION format: H[H]:M[M]:S[S]'
   else
-    DIR=$(dirname "$1")
-    NAME=$(basename -- "$1")
-    LABEL="${NAME%.*}"
-    EXT="${NAME##*.}"
+    directory=$(dirname "$1")
+    file_name=$(basename -- "$1")
+    file_label="${file_name%.*}"
+    file_extension="${NAME##*.}"
     ffmpeg -v warning \
-	  -i "$1" \
+      -i "$1" \
       -ss "$2" \
       -t "$3" \
       -c:v copy \
       -c:a copy \
-      "${DIR}/${LABEL}-cut.${EXT}"
+      "${directory}/${file_label}-cut.${file_extension}"
   fi
-} 
+}
 
 # Count BFrames
 function ffbframes() {
@@ -77,7 +77,7 @@ function ffishdr() {
   if [[ $# -ne 1 ]]; then
     echo 'ffishdr INPUT'
   else
-    STREAMINFO=$(
+    streaminfo=$(
       ffprobe -v error \
         -show_streams \
         -select_streams v:0 \
@@ -85,12 +85,12 @@ function ffishdr() {
         -i "${1}" |
         jq '.streams[0]'
     )
-    COLORSPACE=$(jq -r '.color_space' <<<"${STREAMINFO}")
-    COLORPRIMARIES=$(jq -r '.color_primaries' <<<"${STREAMINFO}")
-    COLORTRANSFER=$(jq -r '.color_transfer' <<<"${STREAMINFO}")
-    if [ "${COLORSPACE}" = "bt2020nc" ] ||
-      [ "${COLORPRIMARIES}" = "bt2020" ] ||
-      [ "${COLORTRANSFER}" = "smpte2084" ]; then
+    colorspace=$(jq -r '.color_space' <<<"$streaminfo")
+    colorprimaries=$(jq -r '.color_primaries' <<<"$streaminfo")
+    colortransfer=$(jq -r '.color_transfer' <<<"$streaminfo")
+    if [ "$colorspace" = "bt2020nc" ] ||
+      [ "$colorspace" = "bt2020" ] ||
+      [ "$colortransfer" = "smpte2084" ]; then
       echo true
     else
       echo false
@@ -103,10 +103,10 @@ function ffcropheight() {
   if [[ $# -ne 1 ]]; then
     echo 'ffcropheight INPUT'
   else
-    DURATION=$(ffduration "$1")
-    STEP=$((DURATION / 10))
+    duration=$(ffduration "$1")
+    step=$((duration / 10))
     for i in $(seq 0 10); do
-      time=$((i * STEP))
+      time=$((i * step))
       ffmpeg \
         -ss $time \
         -i "$1" \
@@ -144,7 +144,7 @@ function ffduration() {
       -show_entries "format=duration" \
       -of "default=noprint_wrappers=1:nokey=1" \
       "$1" |
-    cut -d . -f 1
+      cut -d . -f 1
   fi
 }
 
@@ -153,13 +153,13 @@ function ffbitrate() {
   if [[ $# -ne 1 ]]; then
     echo 'ffbitrate INPUT'
   else
-    BITRATE=$(
+    bitrate=$(
       ffprobe \
         -v error \
         -show_entries "format=bit_rate" \
         -of "default=noprint_wrappers=1:nokey=1" \
         "$1"
-      )
-    echo $(( BITRATE / 1000 ))
+    )
+    echo $((bitrate / 1000))
   fi
 }

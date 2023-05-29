@@ -1,10 +1,12 @@
+#!/bin/bash
+
 function fffilmpass1() {
   if [[ $# -ne 1 ]]; then
     echo 'fffilmpass1 INPUT'
   else
-    CROP=$(ffcropheight "${1}")
-    if [ $(ffishdr "${1}") = true ]; then
-      TONEMAP="
+    target_height=$(ffcropheight "$1")
+    if [ $(ffishdr "$1") = true ]; then
+      tone_map="
         tonemapping=bt.2390:
         tonemapping_param=0.5:
         colorspace=bt709:
@@ -16,7 +18,7 @@ function fffilmpass1() {
     ffmpeg \
       -init_hw_device vulkan=gpu \
       -filter_hw_device gpu \
-      -i "${1}" \
+      -i "$1" \
       -map 0:v:0 \
       -c:v libx264 \
       -profile:v high \
@@ -30,13 +32,13 @@ function fffilmpass1() {
         merange=24
       " \
       -vf "
-        crop=iw:${CROP},
+        crop=iw:${target_height},
         hwupload,
         libplacebo=
           w=1920:h=-1:
           downscaler=ewa_lanczos:
           deband=true:
-          ${TONEMAP}
+          ${tone_map}
           format=yuv420p,
         hwdownload,
         format=yuv420p
@@ -53,9 +55,9 @@ function fffilmpass2() {
   if [[ $# -ne 2 ]]; then
     echo 'fffilmpass2 INPUT OUTPUT'
   else
-    CROP=$(ffcropheight "${1}")
-    if [ $(ffishdr "${1}") = true ]; then
-      TONEMAP="
+    target_height=$(ffcropheight "$1")
+    if [ $(ffishdr "$1") = true ]; then
+      tone_map="
         tonemapping=bt.2390:
         tonemapping_param=0.5:
         colorspace=bt709:
@@ -67,7 +69,7 @@ function fffilmpass2() {
     ffmpeg \
       -init_hw_device vulkan=gpu \
       -filter_hw_device gpu \
-      -i "${1}" \
+      -i "$1" \
       -map 0:v:0 \
       -c:v libx264 \
       -profile:v high \
@@ -81,13 +83,13 @@ function fffilmpass2() {
         merange=24
       " \
       -vf "
-        crop=iw:${CROP},
+        crop=iw:${target_height},
         hwupload,
         libplacebo=
           w=1920:h=-1:
           downscaler=ewa_lanczos:
           deband=true:
-          ${TONEMAP}
+          ${tone_map}
           format=yuv420p,
         hwdownload,
         format=yuv420p
@@ -101,7 +103,7 @@ function fffilmpass2() {
       -c:s copy \
       -map_metadata -1 \
       -pass 2 \
-      "${2}"
+      "$2"
   fi
 }
 
@@ -109,7 +111,7 @@ function fffilm() {
   if [[ $# -ne 2 ]]; then
     echo 'ffencode INPUT OUTPUT'
   else
-    fffilmpass1 "${1}" &&
-    fffilmpass2 "${1}" "${2}"
+    fffilmpass1 "$1" &&
+      fffilmpass2 "$1" "$2"
   fi
 }
