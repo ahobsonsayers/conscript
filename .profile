@@ -28,12 +28,12 @@ if command -v go &>/dev/null; then
 fi
 
 # vulkan
-HOMEBREW_VULKAN="$HOMBREW_PREFIX/share/vulkan"
-if [ -d "$HOMEBREW_VULKAN" ]; then
-    export VK_DRIVER_FILES="$HOMEBREW_VULKAN/icd.d"
+BREW_VK_DRIVER_FILES="$HOMBREW_PREFIX/share/vulkan/icd.d"
+if [ -d "$BREW_VK_DRIVER_FILES" ]; then
+    export VK_DRIVER_FILES="$BREW_VK_DRIVER_FILES"
 fi
 
 # functions
-for file in "$HOME/functions/*"; do
+for file in $HOME/functions/*; do
     . "$file"
 done

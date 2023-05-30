@@ -8,6 +8,9 @@ function fftvpass1() {
     target_bitrate=$(((source_bitrate / 250) * 25))
     target_height=$(ffcropheight "$1")
     ffmpeg \
+      -loglevel warning \
+      -hide_banner \
+      -stats \
       -init_hw_device vulkan \
       -i "$1" \
       -map 0:v:0 \
@@ -55,6 +58,9 @@ function fftvpass2() {
     target_bitrate=$(((source_bitrate / 250) * 25))
     target_height=$(ffcropheight "$1")
     ffmpeg \
+      -loglevel warning \
+      -hide_banner \
+      -stats \
       -init_hw_device vulkan \
       -i "$1" \
       -map 0:v:0 \

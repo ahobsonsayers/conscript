@@ -16,8 +16,10 @@ function fffilmpass1() {
       "
     fi
     ffmpeg \
-      -init_hw_device vulkan=gpu \
-      -filter_hw_device gpu \
+      -loglevel warning \
+      -hide_banner \
+      -stats \
+      -init_hw_device vulkan \
       -i "$1" \
       -map 0:v:0 \
       -c:v libx264 \
@@ -67,8 +69,10 @@ function fffilmpass2() {
       "
     fi
     ffmpeg \
-      -init_hw_device vulkan=gpu \
-      -filter_hw_device gpu \
+      -loglevel warning \
+      -hide_banner \
+      -stats \
+      -init_hw_device vulkan \
       -i "$1" \
       -map 0:v:0 \
       -c:v libx264 \
