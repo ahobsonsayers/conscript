@@ -3,7 +3,7 @@
 function fftvpass1() {
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <inputs>"
-    exit 1
+    return 1
   fi
 
   source_bitrate=$(ffbitrate "$1")
@@ -55,7 +55,7 @@ function fftvpass1() {
 function fftvpass2() {
   if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <output>"
-    exit 1
+    return 1
   fi
 
   source="$(file_label "$1")"
@@ -117,7 +117,7 @@ function fftvpass2() {
 function fftv() {
   if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <output>"
-    exit 1
+    return 1
   fi
 
   fftvpass1 "$1" &&

@@ -6,7 +6,7 @@
 function ffquality {
   if [[ $# -eq 0 ]] || [[ $# -eq 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <original> <timestamp>"
-    exit 1
+    return 1
   fi
 
   directory=$(dirname "$2")
@@ -29,7 +29,7 @@ function ffscreenshot() {
   if [[ $# -eq 0 ]] || [[ $# -eq 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <timestamp>"
     echo "<timestamp> format: H[H]:M[M]:S[S]"
-    exit 1
+    return 1
   fi
 
   directory=$(dirname "$1")
@@ -48,7 +48,7 @@ function ffcut() {
   if [[ $# -eq 0 ]] || [[ $# -eq 1 ]] || [[ $# -eq 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <timestamp> <duration>"
     echo "<timestamp> and <duration> format: H[H]:M[M]:S[S]"
-    exit 1
+    return 1
   fi
 
   directory=$(dirname "$1")
@@ -68,7 +68,7 @@ function ffcut() {
 function ffbframes() {
   if [[ $# -ne 1 ]]; then
     echo 'Usage: ffbframes <input>'
-    exit 1
+    return 1
   fi
 
   ffprobe -v warning \
@@ -82,7 +82,7 @@ function ffbframes() {
 function ffishdr() {
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
-    exit 1
+    return 1
   fi
 
   streaminfo=$(
@@ -110,7 +110,7 @@ function ffishdr() {
 function ffcropheight() {
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
-    exit 1
+    return 1
   fi
 
   duration=$(ffduration "$1")
@@ -139,7 +139,7 @@ function ffcropheight() {
 function ffsettings() {
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
-    exit 1
+    return 1
   fi
 
   mediainfo --Output=JSON "$1" |
@@ -152,7 +152,7 @@ function ffsettings() {
 function ffduration() {
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
-    exit 1
+    return 1
   fi
 
   ffprobe \
@@ -167,7 +167,7 @@ function ffduration() {
 function ffbitrate() {
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
-    exit 1
+    return 1
   fi
 
   bitrate=$(

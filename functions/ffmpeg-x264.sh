@@ -3,7 +3,7 @@
 function fffilmpass1() {
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
-    exit 1
+    return 1
   fi
 
   target_height=$(ffcropheight "$1")
@@ -58,7 +58,7 @@ function fffilmpass1() {
 function fffilmpass2() {
   if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <outputs>"
-    exit 1
+    return 1
   fi
 
   source="$(file_label "$1")"
@@ -121,7 +121,7 @@ function fffilmpass2() {
 function fffilm() {
   if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <output>"
-    exit 1
+    return 1
   fi
 
   fffilmpass1 "$1" &&

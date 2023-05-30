@@ -3,7 +3,7 @@
 function fftv_watch() {
   if [ $# -ne 1 ]; then
     echo "Usage: ${FUNCNAME[0]} <directory>"
-    exit 1
+    return 1
   fi
 
   # Get directories
