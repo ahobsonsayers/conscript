@@ -6,7 +6,9 @@
 function ffquality {
   if [[ $# -eq 0 ]] || [[ $# -eq 1 ]]; then
     echo 'ffquality ORGINAL TRANSCODE'
-  else
+    exit 1
+  fi
+  
     directory=$(dirname "$2")
     file_name=$(basename -- "$2")
     ffmpeg-quality-metrics "$2" "$1" \
@@ -19,7 +21,7 @@ function ffquality {
         mse: .psnr.mse_avg 
       }' \
         >"${directory}/${file_name%.*}.json"
-  fi
+
 }
 
 # Screenshot
@@ -27,7 +29,9 @@ function ffscreenshot() {
   if [[ $# -eq 0 ]] || [[ $# -eq 1 ]]; then
     echo 'ffcut INPUT TIMESTAMP'
     echo 'TIMESTAMP format: H[H]:M[M]:S[S]'
-  else
+    exit 1
+  fi
+  
     directory=$(dirname "$1")
     file_name=$(basename -- "$1")
     ffmpeg -v error \
@@ -36,7 +40,6 @@ function ffscreenshot() {
       -frames:v 1 \
       -update 1 \
       "${directory}/${file_name%.*}.png"
-  fi
 }
 
 # Cut
@@ -44,11 +47,13 @@ function ffcut() {
   if [[ $# -eq 0 ]] || [[ $# -eq 1 ]] || [[ $# -eq 2 ]]; then
     echo 'ffcut INPUT TIMESTAMP DURATION'
     echo 'TIMESTAMP and DURATION format: H[H]:M[M]:S[S]'
-  else
+    exit 1
+  fi
+  
     directory=$(dirname "$1")
     file_name=$(basename -- "$1")
     file_label="${file_name%.*}"
-    file_extension="${NAME##*.}"
+    file_extension="${file_name##*.}"
     ffmpeg -v warning \
       -i "$1" \
       -ss "$2" \
@@ -56,27 +61,29 @@ function ffcut() {
       -c:v copy \
       -c:a copy \
       "${directory}/${file_label}-cut.${file_extension}"
-  fi
 }
 
 # Count BFrames
 function ffbframes() {
   if [[ $# -ne 1 ]]; then
     echo 'ffbframes INPUT'
-  else
+    exit 1
+  fi
+  
     ffprobe -v warning \
       -show_frames \
       "${1}" |
       grep pict_type=B |
       wc -l
-  fi
 }
 
 # Is HDR
 function ffishdr() {
   if [[ $# -ne 1 ]]; then
     echo 'ffishdr INPUT'
-  else
+    exit 1
+  fi
+  
     streaminfo=$(
       ffprobe -v error \
         -show_streams \
@@ -95,14 +102,15 @@ function ffishdr() {
     else
       echo false
     fi
-  fi
 }
 
 # Get Crop Height
 function ffcropheight() {
   if [[ $# -ne 1 ]]; then
     echo 'ffcropheight INPUT'
-  else
+    exit 1
+  fi
+  
     duration=$(ffduration "$1")
     step=$((duration / 10))
     for i in $(seq 0 10); do
@@ -119,40 +127,43 @@ function ffcropheight() {
     done |
       uniq -c | sort -bh |
       tail -1 | awk '{print $2}'
-  fi
 }
 
 # Print Encode Settings
 function ffsettings() {
   if [[ $# -ne 1 ]]; then
     echo 'ffsettings INPUT'
-  else
+    exit 1
+  fi
+  
     mediainfo --Output=JSON "$1" |
       jq -r '.media.track[1].Encoded_Library_Settings' |
       sed "s| / |\n|g" |
       sort
-  fi
 }
 
 # Print Duration
 function ffduration() {
   if [[ $# -ne 1 ]]; then
     echo 'ffduration INPUT'
-  else
+    exit 1
+  fi
+  
     ffprobe \
       -v error \
       -show_entries "format=duration" \
       -of "default=noprint_wrappers=1:nokey=1" \
       "$1" |
       cut -d . -f 1
-  fi
 }
 
 # Print Bitrate
 function ffbitrate() {
   if [[ $# -ne 1 ]]; then
     echo 'ffbitrate INPUT'
-  else
+    exit 1
+  fi
+  
     bitrate=$(
       ffprobe \
         -v error \
@@ -161,5 +172,4 @@ function ffbitrate() {
         "$1"
     )
     echo $((bitrate / 1000))
-  fi
 }

@@ -3,7 +3,9 @@
 function fftvpass1() {
   if [[ $# -ne 1 ]]; then
     echo 'fftvpass1 INPUT'
-  else
+    exit 1
+  fi
+  
     source_bitrate=$(ffbitrate "$1")
     target_bitrate=$(((source_bitrate / 250) * 25))
     target_height=$(ffcropheight "$1")
@@ -47,13 +49,15 @@ function fftvpass1() {
       -sn \
       -f null \
       -
-  fi
 }
 
 function fftvpass2() {
   if [[ $# -ne 2 ]]; then
     echo 'fftvpass2 INPUT OUTPUT'
-  else
+    exit 1
+  fi
+  
+    source="$(file_label "$1")"
     source_bitrate=$(ffbitrate "$1")
     target_bitrate=$(((source_bitrate / 250) * 25))
     target_height=$(ffcropheight "$1")
@@ -103,16 +107,17 @@ function fftvpass2() {
       -map 0:s:m:language:eng? \
       -c:s copy \
       -map_metadata -1 \
+      -metadata source="$source" \
       -y \
       "$2"
-  fi
 }
 
 function fftv() {
   if [[ $# -ne 2 ]]; then
     echo 'fftv INPUT OUTPUT'
-  else
+    exit 1
+  fi
+  
     fftvpass1 "$1" &&
       fftvpass2 "$1" "$2"
-  fi
 }

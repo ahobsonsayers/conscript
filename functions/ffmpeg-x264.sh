@@ -3,7 +3,9 @@
 function fffilmpass1() {
   if [[ $# -ne 1 ]]; then
     echo 'fffilmpass1 INPUT'
-  else
+    exit 1
+  fi
+  
     target_height=$(ffcropheight "$1")
     if [ $(ffishdr "$1") = true ]; then
       tone_map="
@@ -50,13 +52,15 @@ function fffilmpass1() {
       -pass 1 \
       -f null \
       -
-  fi
 }
 
 function fffilmpass2() {
   if [[ $# -ne 2 ]]; then
     echo 'fffilmpass2 INPUT OUTPUT'
-  else
+    exit 1
+  fi
+  
+    source="$(file_label "$1")"
     target_height=$(ffcropheight "$1")
     if [ $(ffishdr "$1") = true ]; then
       tone_map="
@@ -106,16 +110,18 @@ function fffilmpass2() {
       -map 0:s:m:language:eng? \
       -c:s copy \
       -map_metadata -1 \
+      -metadata source="$source" \
       -pass 2 \
+      -y \
       "$2"
-  fi
 }
 
 function fffilm() {
   if [[ $# -ne 2 ]]; then
     echo 'ffencode INPUT OUTPUT'
-  else
+    exit 1
+  fi
+  
     fffilmpass1 "$1" &&
       fffilmpass2 "$1" "$2"
-  fi
 }

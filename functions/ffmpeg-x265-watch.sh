@@ -28,6 +28,18 @@ function fftv_watch() {
       # If file is and mkv
       if [[ "$file_name" == *.mkv || "$file_name" == *.mp4 ]]; then
         
+        # Get outoit file name
+        target_file_name=$(
+          echo "$file_name" |
+            sd -f i '(amzn|dnsp|hmax|atmos)' '' |
+            sd -f i '[ .()-]+' '.' |
+            sd -f i '1080p' '720p' |
+            sd -f i 'web(.)?dl' 'WEB-DL' |
+            sd -f i 'DD(P|\+)?(\.)?(5.1|2.0)' '2CH' |
+            sd -f i '[hx](\.)?264' 'x265' |
+            sd -f i -- '\.[a-zA-Z0-9]+\.(mp4|mkv)' '-arranhs.$1'
+        )
+        
         # Transcode file and move it when completed/errored
         echo "Transcoding: ${file_name}"
         
@@ -38,3 +50,4 @@ function fftv_watch() {
       fi
     done
 }
+ 
