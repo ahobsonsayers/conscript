@@ -2,25 +2,26 @@
 
 function fftvpass1() {
   if [[ $# -ne 1 ]]; then
-    echo 'fftvpass1 INPUT'
+    echo "Usage: ${FUNCNAME[0]} <inputs>"
     exit 1
   fi
-  
-    source_bitrate=$(ffbitrate "$1")
-    target_bitrate=$(((source_bitrate / 250) * 25))
-    target_height=$(ffcropheight "$1")
-    ffmpeg \
-      -loglevel warning \
-      -hide_banner \
-      -stats \
-      -init_hw_device vulkan \
-      -i "$1" \
-      -map 0:v:0 \
-      -c:v libx265 \
-      -profile:v main10 \
-      -b:v "${target_bitrate}k" \
-      -preset:v slow \
-      -x265-params "
+
+  source_bitrate=$(ffbitrate "$1")
+  target_bitrate=$(((source_bitrate / 250) * 25))
+  target_height=$(ffcropheight "$1")
+
+  ffmpeg \
+    -loglevel warning \
+    -hide_banner \
+    -stats \
+    -init_hw_device vulkan \
+    -i "$1" \
+    -map 0:v:0 \
+    -c:v libx265 \
+    -profile:v main10 \
+    -b:v "${target_bitrate}k" \
+    -preset:v slow \
+    -x265-params "
         bframes=10:
         ref=6:
         subme=7:
@@ -30,7 +31,7 @@ function fftvpass1() {
         psy-rd=1:
         pass=1
       " \
-      -vf "
+    -vf "
         crop=iw:${target_height},
         hwupload,
         libplacebo=
@@ -45,34 +46,35 @@ function fftvpass1() {
         hwdownload,
         format=yuv420p10le
       " \
-      -an \
-      -sn \
-      -f null \
-      -
+    -an \
+    -sn \
+    -f null \
+    -
 }
 
 function fftvpass2() {
   if [[ $# -ne 2 ]]; then
-    echo 'fftvpass2 INPUT OUTPUT'
+    echo "Usage: ${FUNCNAME[0]} <input> <output>"
     exit 1
   fi
-  
-    source="$(file_label "$1")"
-    source_bitrate=$(ffbitrate "$1")
-    target_bitrate=$(((source_bitrate / 250) * 25))
-    target_height=$(ffcropheight "$1")
-    ffmpeg \
-      -loglevel warning \
-      -hide_banner \
-      -stats \
-      -init_hw_device vulkan \
-      -i "$1" \
-      -map 0:v:0 \
-      -c:v libx265 \
-      -profile:v main10 \
-      -b:v "${target_bitrate}k" \
-      -preset:v slow \
-      -x265-params "
+
+  source="$(file_label "$1")"
+  source_bitrate=$(ffbitrate "$1")
+  target_bitrate=$(((source_bitrate / 250) * 25))
+  target_height=$(ffcropheight "$1")
+
+  ffmpeg \
+    -loglevel warning \
+    -hide_banner \
+    -stats \
+    -init_hw_device vulkan \
+    -i "$1" \
+    -map 0:v:0 \
+    -c:v libx265 \
+    -profile:v main10 \
+    -b:v "${target_bitrate}k" \
+    -preset:v slow \
+    -x265-params "
         bframes=10:
         ref=6:
         subme=7:
@@ -82,7 +84,7 @@ function fftvpass2() {
         psy-rd=1:
         pass=2
       " \
-      -vf "
+    -vf "
         crop=iw:${target_height},
         hwupload,
         libplacebo=
@@ -97,27 +99,27 @@ function fftvpass2() {
         hwdownload,
         format=yuv420p10le
       " \
-      -map 0:a:0 \
-      -c:a libfdk_aac \
-      -profile:a aac_he_v2 \
-      -vbr 3 \
-      -ac 2 \
-      -af "asetpts=PTS+0.2/TB" \
-      -metadata:s:a title="2.0" \
-      -map 0:s:m:language:eng? \
-      -c:s copy \
-      -map_metadata -1 \
-      -metadata source="$source" \
-      -y \
-      "$2"
+    -map 0:a:0 \
+    -c:a libfdk_aac \
+    -profile:a aac_he_v2 \
+    -vbr 3 \
+    -ac 2 \
+    -af "asetpts=PTS+0.2/TB" \
+    -metadata:s:a title="2.0" \
+    -map 0:s:m:language:eng? \
+    -c:s copy \
+    -map_metadata -1 \
+    -metadata source="$source" \
+    -y \
+    "$2"
 }
 
 function fftv() {
   if [[ $# -ne 2 ]]; then
-    echo 'fftv INPUT OUTPUT'
+    echo "Usage: ${FUNCNAME[0]} <input> <output>"
     exit 1
   fi
-  
-    fftvpass1 "$1" &&
-      fftvpass2 "$1" "$2"
+
+  fftvpass1 "$1" &&
+    fftvpass2 "$1" "$2"
 }
