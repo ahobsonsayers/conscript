@@ -35,7 +35,9 @@ function ffscreenshot() {
   directory=$(dirname "$1")
   file_label=$(file_label "$1")
 
-  ffmpeg -v error \
+  ffmpeg \
+    -hide_banner -v warning \
+    -nostdin -stats \
     -ss "$2" \
     -i "$1" \
     -frames:v 1 \
@@ -55,7 +57,9 @@ function ffcut() {
   file_label="$(file_label "$1")"
   file_extension="$(file_extension "$1")"
 
-  ffmpeg -v warning \
+  ffmpeg \
+    -hide_banner -v warning \
+    -nostdin -stats \
     -i "$1" \
     -ss "$2" \
     -t "$3" \
@@ -71,7 +75,8 @@ function ffbframes() {
     return 1
   fi
 
-  ffprobe -v warning \
+  ffprobe \
+    -hide_banner -v warning \
     -show_frames \
     "${1}" |
     grep pict_type=B |
@@ -86,7 +91,8 @@ function ffishdr() {
   fi
 
   streaminfo=$(
-    ffprobe -v error \
+    ffprobe \
+      -hide_banner -v warning \
       -show_streams \
       -select_streams v:0 \
       -of json \
@@ -121,6 +127,8 @@ function ffcropheight() {
     time=$((i * step))
 
     ffmpeg \
+      -hide_banner -v warning \
+      -nostdin -stats \
       -ss $time \
       -i "$1" \
       -frames:v 1 \
@@ -156,7 +164,7 @@ function ffduration() {
   fi
 
   ffprobe \
-    -v error \
+    -hide_banner -v warning \
     -show_entries "format=duration" \
     -of "default=noprint_wrappers=1:nokey=1" \
     "$1" |
@@ -172,7 +180,7 @@ function ffbitrate() {
 
   bitrate=$(
     ffprobe \
-      -v error \
+      -hide_banner -v warning \
       -show_entries "format=bit_rate" \
       -of "default=noprint_wrappers=1:nokey=1" \
       "$1"

@@ -19,9 +19,8 @@ function fffilmpass1() {
   fi
 
   ffmpeg \
-    -loglevel warning \
-    -hide_banner \
-    -stats \
+    -hide_banner -v warning \
+    -nostdin -stats \
     -init_hw_device vulkan \
     -i "$1" \
     -map 0:v:0 \
@@ -75,9 +74,8 @@ function fffilmpass2() {
   fi
 
   ffmpeg \
-    -loglevel warning \
-    -hide_banner \
-    -stats \
+    -hide_banner -v warning \
+    -nostdin -stats \
     -init_hw_device vulkan \
     -i "$1" \
     -map 0:v:0 \

@@ -1,25 +1,34 @@
 # homebrew
 HOMBREW_PREFIX="/home/linuxbrew/.linuxbrew"
-if [ -d "$HOMBREW_PREFIX" ]; then
+if [[ -d "$HOMBREW_PREFIX" ]]; then
     eval "$($HOMBREW_PREFIX/bin/brew shellenv)"
 fi
 
-# if running bash
-if [ -n "$BASH_VERSION" ]; then
-    # include .bashrc if it exists
-    if [ -f "$HOME/.bashrc" ]; then
-        . "$HOME/.bashrc"
-    fi
+# homebrew completions
+if [[ -r "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh" ]]; then
+  source "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh"
+else
+  for completion in "$HOMEBREW_PREFIX/etc/bash_completion.d/"*; do
+    source "$completion"
+  done
 fi
 
-# add user home bin to path
-if [ -d "$HOME/bin" ]; then
-    PATH="$HOME/bin:$PATH"
+# homebrew vulkan
+brew_vulkan="$HOMBREW_PREFIX/share/vulkan/icd.d"
+if [[ -d "$brew_vulkan" ]]; then
+    export VK_DRIVER_FILES="$brew_vulkan"
+fi
+
+# add user bin to path
+user_bin="$HOME/bin"
+if [[ -d "$user_bin" ]]; then
+    PATH="$user_bin:$PATH"
 fi
 
 # add user local bin to path
-if [ -d "$HOME/.local/bin" ]; then
-    PATH="$HOME/.local/bin:$PATH"
+user_local_bin="$HOME/.local/bin"
+if [[ -d "$user_local_bin" ]]; then
+    PATH="$user_local_bin:$PATH"
 fi
 
 # go
@@ -27,13 +36,13 @@ if command -v go &>/dev/null; then
     export PATH="$(go env GOPATH)/bin:$PATH"
 fi
 
-# vulkan
-BREW_VK_DRIVER_FILES="$HOMBREW_PREFIX/share/vulkan/icd.d"
-if [ -d "$BREW_VK_DRIVER_FILES" ]; then
-    export VK_DRIVER_FILES="$BREW_VK_DRIVER_FILES"
-fi
-
-# functions
-for file in $HOME/functions/*; do
-    . "$file"
+# source functions
+for function_file in "$HOME/functions/"*; do
+    source "$function_file"
 done
+
+# source .bashrc
+bashrc_path="$HOME/.bashrc"
+if [ -f "$bashrc_path" ]; then
+    source "$bashrc_path"
+fi
