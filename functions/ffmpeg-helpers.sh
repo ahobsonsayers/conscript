@@ -112,6 +112,36 @@ function ffishdr() {
   fi
 }
 
+# Get video width
+function ffwidth() {
+  if [[ $# -ne 1 ]]; then
+    echo "Usage: ${FUNCNAME[0]} <input>"
+    return 1
+  fi
+
+  ffprobe \
+    -hide_banner -v warning \
+    -select_streams v:0 \
+    -show_entries "stream=width" \
+    -of "default=noprint_wrappers=1:nokey=1" \
+    "$1"
+}
+
+# Get video height
+function ffheight() {
+  if [[ $# -ne 1 ]]; then
+    echo "Usage: ${FUNCNAME[0]} <input>"
+    return 1
+  fi
+
+  ffprobe \
+    -hide_banner -v warning \
+    -select_streams v:0 \
+    -show_entries "stream=height" \
+    -of "default=noprint_wrappers=1:nokey=1" \
+    "$1"
+}
+
 # Get Crop Height
 function ffcropheight() {
   if [[ $# -ne 1 ]]; then
