@@ -157,7 +157,7 @@ function ffcropheight() {
     time=$((i * step))
 
     ffmpeg \
-      -hide_banner -v warning \
+      -hide_banner \
       -nostdin -stats \
       -ss $time \
       -i "$1" \
@@ -165,7 +165,7 @@ function ffcropheight() {
       -vf "cropdetect=round=2" \
       -f null \
       - 2>&1 |
-      grep -o crop=.* |
+      grep -o "crop=.*" |
       cut -d : -f 2
 
   done |
