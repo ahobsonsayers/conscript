@@ -67,8 +67,8 @@ function fftvpass() {
 
 	# Split output args into an array
 	local ffmpeg_output_args_array
-	array_parse ffmpeg_output_args_array "$ffmpeg_output_args"
-
+  array_parse ffmpeg_output_args_array "$ffmpeg_output_args"
+  
 	ffmpeg \
 		-hide_banner -v warning \
 		-nostdin -stats \
