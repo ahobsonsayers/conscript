@@ -21,7 +21,7 @@ function ffquality {
         psnr: .psnr.psnr_avg, 
         mse: .psnr.mse_avg 
       }' \
-      >"${directory}/${file_name%.*}.json"
+      >"${directory}/${file_label%.*}.json"
 }
 
 # Screenshot
@@ -37,7 +37,7 @@ function ffscreenshot() {
 
   ffmpeg \
     -hide_banner -v warning \
-    -nostdin -stats \
+    -nostdin \
     -ss "$2" \
     -i "$1" \
     -frames:v 1 \
@@ -79,8 +79,7 @@ function ffbframes() {
     -hide_banner -v warning \
     -show_frames \
     "${1}" |
-    grep pict_type=B |
-    wc -l
+    grep -c "pict_type=B"
 }
 
 # Is HDR
@@ -104,7 +103,7 @@ function ffishdr() {
   colortransfer=$(jq -r '.color_transfer' <<<"$streaminfo")
 
   if [ "$colorspace" = "bt2020nc" ] ||
-    [ "$colorspace" = "bt2020" ] ||
+    [ "$colorprimaries" = "bt2020" ] ||
     [ "$colortransfer" = "smpte2084" ]; then
     echo true
   else

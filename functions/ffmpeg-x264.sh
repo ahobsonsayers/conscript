@@ -7,7 +7,7 @@ function fffilmpass1() {
   fi
 
   target_height=$(ffcropheight "$1")
-  if [ $(ffishdr "$1") = true ]; then
+  if [ "$(ffishdr "$1")" = true ]; then
     tone_map="
         tonemapping=bt.2390:
         tonemapping_param=0.5:
@@ -62,7 +62,7 @@ function fffilmpass2() {
 
   source="$(file_label "$1")"
   target_height=$(ffcropheight "$1")
-  if [ $(ffishdr "$1") = true ]; then
+  if [ "$(ffishdr "$1")" = true ]; then
     tone_map="
         tonemapping=bt.2390:
         tonemapping_param=0.5:

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # homebrew
 HOMBREW_PREFIX="/home/linuxbrew/.linuxbrew"
 if [[ -d "$HOMBREW_PREFIX" ]]; then
@@ -5,12 +7,14 @@ if [[ -d "$HOMBREW_PREFIX" ]]; then
 fi
 
 # homebrew completions
-if [[ -r "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh" ]]; then
-  source "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh"
+homebrew_completion="$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh"
+homebrew_completions="$HOMEBREW_PREFIX/etc/bash_completion.d/"*
+if [[ -r "$homebrew_completion" ]]; then
+    source "$homebrew_completion"
 else
-  for completion in "$HOMEBREW_PREFIX/etc/bash_completion.d/"*; do
-    source "$completion"
-  done
+    for completion in "$homebrew_completions"*; do
+        source "$completion"
+    done
 fi
 
 # homebrew vulkan
@@ -33,7 +37,7 @@ fi
 
 # go
 if command -v go &>/dev/null; then
-    export PATH="$(go env GOPATH)/bin:$PATH"
+    PATH="$(go env GOPATH)/bin:$PATH"
 fi
 
 # source functions
