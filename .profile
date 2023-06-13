@@ -11,7 +11,7 @@ homebrew_completion="$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh"
 homebrew_completions="$HOMEBREW_PREFIX/etc/bash_completion.d/"*
 if [[ -r "$homebrew_completion" ]]; then
     source "$homebrew_completion"
-else
+elif [[ -d "$homebrew_completions" ]]; then
     for completion in "$homebrew_completions"*; do
         source "$completion"
     done

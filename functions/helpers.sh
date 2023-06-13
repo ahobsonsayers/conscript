@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function error() {
-  echo $@ 1>&2
+	echo "$@" 1>&2
 }
 
 function abspath() {
@@ -34,7 +34,7 @@ function array_parse() {
 		echo "Usage: ${FUNCNAME[0]} <var> <string>"
 		return 1
 	fi
-	mapfile -t "$1" < <(xargs -n1 <<<"$2")
+	readarray -t "$1" < <(xargs -n1 <<<"$2")
 }
 
 function file_name() {
@@ -52,7 +52,8 @@ function file_label() {
 		return 1
 	fi
 
-	local file_name="$(file_name "$1")"
+	local file_name
+	file_name="$(file_name "$1")"
 	echo "${file_name%.*}"
 }
 
@@ -62,6 +63,7 @@ function file_extension() {
 		return 1
 	fi
 
-	local file_name="$(file_name "$1")"
+	local file_name
+	file_name="$(file_name "$1")"
 	echo "${file_name##*.}"
 }

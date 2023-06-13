@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Screenshot
 function ffscreenshot() {
@@ -8,8 +8,11 @@ function ffscreenshot() {
 		return 1
 	fi
 
-	local directory=$(dirname "$1")
-	local file_label=$(file_label "$1")
+	local directory
+	local file_label
+
+	directory=$(dirname "$1")
+	file_label=$(file_label "$1")
 
 	ffmpeg \
 		-hide_banner -v warning \
@@ -29,9 +32,13 @@ function ffcut() {
 		return 1
 	fi
 
-	local directory=$(dirname "$1")
-	local file_label="$(file_label "$1")"
-	local file_extension="$(file_extension "$1")"
+	local directory
+	local file_label
+	local file_extension
+
+	directory=$(dirname "$1")
+	file_label="$(file_label "$1")"
+	file_extension="$(file_extension "$1")"
 
 	ffmpeg \
 		-hide_banner -v warning \
@@ -81,17 +88,17 @@ function ffcropheight() {
 		return 1
 	fi
 
-	local duration=$(ffduration "$1")
-	local step=$((duration / 10))
+	local duration
+	local step
+
+	duration=$(ffduration "$1")
+	step=$((duration / 10))
 
 	for i in $(seq 0 10); do
-
-		local time=$((i * step))
-
 		ffmpeg \
 			-hide_banner \
 			-nostdin -stats \
-			-ss $time \
+			-ss $((i * step)) \
 			-i "$1" \
 			-frames:v 1 \
 			-vf "cropdetect=round=2" \
@@ -99,7 +106,6 @@ function ffcropheight() {
 			- 2>&1 |
 			grep -o "crop=.*" |
 			cut -d : -f 2
-
 	done |
 		uniq -c | sort -bh |
 		tail -1 | awk '{print $2}'
@@ -127,7 +133,8 @@ function ffbitrate() {
 		return 1
 	fi
 
-	local bitrate=$(
+	local bitrate
+	bitrate=$(
 		ffprobe \
 			-hide_banner -v warning \
 			-show_entries "format=bit_rate" \
@@ -167,10 +174,15 @@ function ffcolour() {
 		return 1
 	fi
 
-	local colour_info=$(ffcolourinfo "$1")
-	local color_primaries=$(jq -r '.color_primaries' <<<"$colour_info")
-	local color_space=$(jq -r '.color_space' <<<"$colour_info")
-	local color_transfer=$(jq -r '.color_transfer' <<<"$colour_info")
+	local colour_info
+	local color_primaries
+	local color_space
+	local color_transfer
+
+	colour_info=$(ffcolourinfo "$1")
+	color_primaries=$(jq -r '.color_primaries' <<<"$colour_info")
+	color_space=$(jq -r '.color_space' <<<"$colour_info")
+	color_transfer=$(jq -r '.color_transfer' <<<"$colour_info")
 
 	if [[ "$color_primaries" = "null" ]] &&
 		[[ "$color_space" = "null" ]] &&
@@ -227,8 +239,11 @@ function ffquality {
 		return 1
 	fi
 
-	local directory=$(dirname "$2")
-	local file_label=$(file_label "$2")
+	local directory
+	local file_label
+
+	directory=$(dirname "$2")
+	file_label=$(file_label "$2")
 
 	ffmpeg-quality-metrics "$2" "$1" \
 		-s lanczos \

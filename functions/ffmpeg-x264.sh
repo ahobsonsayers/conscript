@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function fffilmpass1() {
   if [[ $# -ne 1 ]]; then
