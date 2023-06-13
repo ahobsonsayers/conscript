@@ -1,5 +1,9 @@
 #!/bin/bash
 
+function error() {
+  echo $@ 1>&2
+}
+
 function abspath() {
 	# From https://stackoverflow.com/a/23002317
 	if [ -d "$1" ]; then
@@ -48,7 +52,7 @@ function file_label() {
 		return 1
 	fi
 
-	file_name="$(file_name "$1")"
+	local file_name="$(file_name "$1")"
 	echo "${file_name%.*}"
 }
 
@@ -58,6 +62,6 @@ function file_extension() {
 		return 1
 	fi
 
-	file_name="$(file_name "$1")"
+	local file_name="$(file_name "$1")"
 	echo "${file_name##*.}"
 }
