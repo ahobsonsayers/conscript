@@ -41,9 +41,9 @@ function fftvpass() {
 		echo "Scaling to 720p"
 		target_bitrate="$((source_bitrate / 9))"
 		scale_param="
-		  w=1280:h=-1:
-		  downscaler=ewa_lanczos:
-    "
+			w=1280:h=-1:
+			downscaler=ewa_lanczos:
+    	"
 	elif [ "$source_width" -eq 1280 ]; then
 		# 720p source
 		echo "No scaling required. Skipping"
