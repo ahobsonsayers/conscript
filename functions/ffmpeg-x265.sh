@@ -57,7 +57,7 @@ function fftvpass() {
 	local crop_param
 	if [ "$source_crop_height" -lt "$source_height" ]; then
 		echo "Cropping to a height of $source_crop_height"
-		crop_param="crop=iw:${target_height},"
+		crop_param="crop=iw:${source_crop_height},"
 		# libplacebo cropping. Doesnt seem to work atm
 		# crop_param="crop_h=$source_crop_height:"
 	else
