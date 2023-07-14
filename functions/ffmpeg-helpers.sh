@@ -92,13 +92,13 @@ function ffcropheight() {
 	local step
 
 	duration=$(ffduration "$1")
-	step=$((duration / 10))
+	step=$((duration / 11))
 
-	for i in $(seq 0 10); do
+	for i in $(seq 1 10); do
 		ffmpeg \
 			-hide_banner \
 			-nostdin -stats \
-			-ss $((i * step)) \
+			-ss "$((i * step))" \
 			-i "$1" \
 			-frames:v 1 \
 			-vf "cropdetect=round=2" \
@@ -107,7 +107,7 @@ function ffcropheight() {
 			grep -o "crop=.*" |
 			cut -d : -f 2
 	done |
-		uniq -c | sort -bh |
+		sort -bh | uniq -c | sort -bh |
 		tail -1 | awk '{print $2}'
 }
 
@@ -135,11 +135,9 @@ function ffbitrate() {
 
 	local bitrate
 	bitrate=$(
-		ffprobe \
-			-hide_banner -v warning \
-			-show_entries "format=bit_rate" \
-			-of "default=noprint_wrappers=1:nokey=1" \
-			"$1"
+	  mediainfo \
+	    --Inform="Video;%BitRate%" \
+	    "$1" 
 	)
 
 	echo $((bitrate / 1000))
@@ -154,10 +152,10 @@ function ffcolourinfo() {
 
 	ffprobe \
 		-hide_banner -v warning \
-		-show_streams \
 		-select_streams v:0 \
+		-show_streams \
 		-of json \
-		-i "${1}" |
+		"$1" |
 		jq '.streams[0] | {
           color_primaries: .color_primaries, 
           color_space: .color_space, 
@@ -187,7 +185,7 @@ function ffcolour() {
 	if [[ "$color_primaries" = "null" ]] &&
 		[[ "$color_space" = "null" ]] &&
 		[[ "$color_transfer" = "null" ]]; then
-		error "No Colour Info Found"
+		echo unknown
 	elif [[ "$color_primaries" = "bt709" || "$color_primaries" = "null" ]] &&
 		[[ "$color_space" = "bt709" || "$color_space" = "null" ]] &&
 		[[ "$color_transfer" = "bt709" || "$color_transfer" = "null" ]]; then
@@ -224,16 +222,32 @@ function ffsettings() {
 		return 1
 	fi
 
-	mediainfo --Output=JSON "$1" |
-		jq -r '.media.track[1].Encoded_Library_Settings' |
-		sed "s| / |\n|g" |
+	mediainfo \
+	  --Inform="Video;%Encoded_Library_Settings%" \
+	  "$1" |
+	  sed "s| / |\n|g" |
 		sort
+}
+
+# get video audio language
+function ffaudiolang() {
+	if [[ $# -ne 1 ]]; then
+		echo "Usage: ${FUNCNAME[0]} <input>"
+		return 1
+	fi
+
+	ffprobe \
+		-hide_banner -v warning \
+		-select_streams a:0 \
+		-show_entries "stream_tags=language" \
+		-of "default=noprint_wrappers=1:nokey=1" \
+		"$1"
 }
 
 # Get video quality metrics
 # https://github.com/slhck/ffmpeg-quality-metrics
 # pipx install ffmpeg-quality-metrics
-function ffquality {
+function ffquality() {
 	if [[ $# -eq 0 ]] || [[ $# -eq 1 ]]; then
 		echo "Usage: ${FUNCNAME[0]} <original> <timestamp>"
 		return 1

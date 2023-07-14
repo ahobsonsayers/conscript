@@ -6,11 +6,18 @@ function fftvpass() {
 		return 1
 	fi
 
-	# Get source info
+	# Get names
 	local source_name
 	source_name="$(file_label "$1")" || return 1
 	echo "Source Name: $source_name"
 
+	local target_name
+	target_name="$(file_label "$2")" || return 1
+	echo "Target Name: $target_name"
+
+	echo
+
+	# Get source info
 	local source_bitrate
 	source_bitrate="$(ffbitrate "$1")" || return 1
 	echo "Source Bitrate: $source_bitrate"
@@ -31,6 +38,10 @@ function fftvpass() {
 	source_colour="$(ffcolour "$1")" || return 1
 	echo "Source Colour: $source_colour"
 
+	local source_audio_language
+	source_audio_language="$(ffaudiolang "$1")" || return 1
+	echo "Source Audio Language: $source_audio_language"
+
 	echo
 
 	# Get target bitrate and scale params
@@ -41,6 +52,7 @@ function fftvpass() {
 		echo "Scaling to 720p"
 		target_bitrate="$((source_bitrate / 9))"
 		scale_params="w=1280:h=-1:downscaler=ewa_lanczos:"
+		# scale_params="zscale=w=1280:h=-1:filter=spline36,"
 	elif [ "$source_width" -eq 1280 ]; then
 		# 720p source
 		echo "No scaling required. Skipping"
@@ -50,9 +62,11 @@ function fftvpass() {
 		return 1
 	fi
 
+	target_bitrate=750
+
 	# Get crop params
 	local crop_param
-	if [ "$source_crop_height" -lt "$source_height" ]; then
+	if [ "$source_crop_height" -lt "$((source_height - 2))" ]; then
 		echo "Cropping to a height of $source_crop_height"
 		crop_param="crop=iw:${source_crop_height},"
 		# libplacebo cropping. Doesnt seem to work atm
@@ -63,7 +77,11 @@ function fftvpass() {
 
 	# Get colour param
 	local colour_params
-	if [ "$source_colour" != "bt709" ]; then
+	if [ -z "$source_colour" ] || [ "$source_colour" = "unknown" ]; then
+		echo "Unknown source colour. Skipping colour mapping"
+	elif [ "$source_colour" = "bt709" ]; then
+		echo "No colour mapping required. Skipping"
+	else
 		echo "Mapping colours to BT.709"
 		colour_params="
 			colorspace=bt709:
@@ -71,8 +89,6 @@ function fftvpass() {
 			color_trc=bt709:
 			range=limited:
 		"
-	else
-		echo "No colour mapping required. Skipping"
 	fi
 
 	echo
@@ -105,14 +121,16 @@ function fftvpass() {
 			-map 0:a:0
 			-c:a libfdk_aac
 			-profile:a aac_he_v2
-			-vbr 3
+			-vbr 4
 			-ac 2
 			-af \"asetpts=PTS+0.2/TB\"
-			-metadata:s:a title=\"2.0\"
 			-map 0:s:m:language:eng?
 			-c:s copy
-			-map_metadata -1
+			-map_metadata:g -1
+			-map_metadata:s -1
 			-metadata source=\"$source_name\"
+			-metadata:s:a language=\"$source_audio_language\"			
+			-metadata:s:s language=eng
 			-y
 			$2
 		"
@@ -124,6 +142,7 @@ function fftvpass() {
 	local output_args_array
 	array_parse output_args_array "$output_args"
 
+	# Run ffmpeg
 	nice ffmpeg \
 		-hide_banner -v warning \
 		-nostdin -stats \
@@ -133,20 +152,7 @@ function fftvpass() {
 		-c:v libx265 \
 		-profile:v main10 \
 		-b:v "${target_bitrate}k" \
-		-preset:v slow \
-		-x265-params "
-			bframes=10:
-			ref=6:
-			subme=7:
-			max-merge=5:
-			amp=1:
-			weightb=1:
-			b-intra=1:
-			aq-motion=1:
-			psy-rd=0:
-			psy-rdoq=0:
-			$pass_params
-		" \
+		-preset:v slower \
 		-vf "
 			$crop_param
 			hwupload,
@@ -154,11 +160,32 @@ function fftvpass() {
 				$colour_params
 				$scale_params
 				deband=true:
-				format=yuv420p10le,
+				format=yuv420p10,
 			hwdownload,
-			format=yuv420p10le
+			format=yuv420p10
+		" \
+		-x265-params "
+			bframes=10:
+			ref=6:
+			subme=7:
+			max-merge=5:
+			rd=4:
+			limit-refs=3:
+			psy-rd=0.5:
+			psy-rdoq=0.5:
+			$pass_params
 		" \
 		"${output_args_array[@]}" || return 1
+
+	# If output file exists asd stat tags
+	if [[ -f $2 ]]; then
+		echo
+		echo "Adding statistic tags using mkvpropedit"
+		echo
+		mkvpropedit --add-track-statistics-tags "$2"
+	fi
+
+	echo
 }
 
 function fftv() {
