@@ -3,6 +3,7 @@
 function fftvpass() {
 	if [[ $# -ne 2 ]]; then
 		echo "Usage: ${FUNCNAME[0]} <input> <output>"
+
 		return 1
 	fi
 
@@ -48,21 +49,15 @@ function fftvpass() {
 	local target_bitrate
 	local scale_params
 	if [ "$source_width" -eq 1920 ]; then
-		# 1080p source
 		echo "Scaling to 720p"
-		target_bitrate="$((source_bitrate / 9))"
 		scale_params="w=1280:h=-1:downscaler=ewa_lanczos:"
 		# scale_params="zscale=w=1280:h=-1:filter=spline36,"
 	elif [ "$source_width" -eq 1280 ]; then
-		# 720p source
 		echo "No scaling required. Skipping"
-		target_bitrate="$((source_bitrate / 4))"
 	else
 		error "Unsupported resolution"
 		return 1
 	fi
-
-	target_bitrate=750
 
 	# Get crop params
 	local crop_param
@@ -121,9 +116,9 @@ function fftvpass() {
 			-map 0:a:0
 			-c:a libfdk_aac
 			-profile:a aac_he_v2
-			-vbr 4
+			-vbr 5
 			-ac 2
-			-af \"asetpts=PTS+0.2/TB\"
+            -af "aresample=first_pts=0"
 			-map 0:s:m:language:eng?
 			-c:s copy
 			-map_metadata:g -1
@@ -151,7 +146,7 @@ function fftvpass() {
 		-map 0:v:0 \
 		-c:v libx265 \
 		-profile:v main10 \
-		-b:v "${target_bitrate}k" \
+		-b:v "800k" \
 		-preset:v slower \
 		-vf "
 			$crop_param

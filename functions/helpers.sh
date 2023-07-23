@@ -67,3 +67,22 @@ function file_extension() {
 	file_name="$(file_name "$1")"
 	echo "${file_name##*.}"
 }
+
+function floor() {
+	if [ $# -ne 1 ]; then
+		echo "Usage: ${FUNCNAME[0]} <number>"
+		return 1
+	fi
+
+	echo $1 | cut -d . -f 1
+}
+
+function ceil() {
+	if [ $# -ne 1 ]; then
+		echo "Usage: ${FUNCNAME[0]} <number>"
+		return 1
+	fi
+
+	floored="$(floor $1)"
+	echo $((floored + 1))
+}

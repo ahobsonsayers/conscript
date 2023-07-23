@@ -32,7 +32,7 @@ function fftv_watch() {
 
 			local input_name
 			local extension
-			
+
 			input_name="$(file_name "$input_path")"
 			extension="$(file_extension "$input_path")"
 

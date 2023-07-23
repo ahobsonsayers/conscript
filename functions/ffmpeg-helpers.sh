@@ -60,9 +60,9 @@ function ffwidth() {
 
 	ffprobe \
 		-hide_banner -v warning \
+		-of "default=noprint_wrappers=1:nokey=1" \
 		-select_streams v:0 \
 		-show_entries "stream=width" \
-		-of "default=noprint_wrappers=1:nokey=1" \
 		"$1"
 }
 
@@ -75,9 +75,9 @@ function ffheight() {
 
 	ffprobe \
 		-hide_banner -v warning \
+		-of "default=noprint_wrappers=1:nokey=1" \
 		-select_streams v:0 \
 		-show_entries "stream=height" \
-		-of "default=noprint_wrappers=1:nokey=1" \
 		"$1"
 }
 
@@ -92,7 +92,8 @@ function ffcropheight() {
 	local step
 
 	duration=$(ffduration "$1")
-	step=$((duration / 11))
+	floored_duration=$(floor "$duration")
+	step=$((floored_duration / 11))
 
 	for i in $(seq 1 10); do
 		ffmpeg \
@@ -120,10 +121,25 @@ function ffduration() {
 
 	ffprobe \
 		-hide_banner -v warning \
-		-show_entries "format=duration" \
 		-of "default=noprint_wrappers=1:nokey=1" \
-		"$1" |
-		cut -d . -f 1
+		-select_streams v:0 \
+		-show_entries "format=duration" \
+		"$1"
+}
+
+# Get audio duration
+function ffaudioduration() {
+	if [[ $# -ne 1 ]]; then
+		echo "Usage: ${FUNCNAME[0]} <input>"
+		return 1
+	fi
+
+	ffprobe \
+		-hide_banner -v warning \
+		-of "default=noprint_wrappers=1:nokey=1" \
+		-select_streams a:0 \
+		-show_entries "format=duration" \
+		"$1"
 }
 
 # Print Bitrate
@@ -135,9 +151,9 @@ function ffbitrate() {
 
 	local bitrate
 	bitrate=$(
-	  mediainfo \
-	    --Inform="Video;%BitRate%" \
-	    "$1" 
+		mediainfo \
+			--Inform="Video;%BitRate%" \
+			"$1"
 	)
 
 	echo $((bitrate / 1000))
@@ -204,7 +220,7 @@ function ffcolour() {
 # Count BFrames
 function ffbframes() {
 	if [[ $# -ne 1 ]]; then
-		echo 'Usage: ffbframes <input>'
+		echo "Usage: ${FUNCNAME[0]} <input>"
 		return 1
 	fi
 
@@ -215,6 +231,20 @@ function ffbframes() {
 		grep -c "pict_type=B"
 }
 
+function ffaudiostart() {
+	if [[ $# -ne 1 ]]; then
+		echo "Usage: ${FUNCNAME[0]} <input>"
+		return 1
+	fi
+
+	ffprobe \
+		-hide_banner -v warning \
+		-of "default=noprint_wrappers=1:nokey=1" \
+		-select_streams a:0 \
+		-show_entries "stream=start_time" \
+		"${1}"
+}
+
 # get video encode settings
 function ffsettings() {
 	if [[ $# -ne 1 ]]; then
@@ -223,9 +253,9 @@ function ffsettings() {
 	fi
 
 	mediainfo \
-	  --Inform="Video;%Encoded_Library_Settings%" \
-	  "$1" |
-	  sed "s| / |\n|g" |
+		--Inform="Video;%Encoded_Library_Settings%" \
+		"$1" |
+		sed "s| / |\n|g" |
 		sort
 }
 
@@ -238,9 +268,9 @@ function ffaudiolang() {
 
 	ffprobe \
 		-hide_banner -v warning \
+		-of "default=noprint_wrappers=1:nokey=1" \
 		-select_streams a:0 \
 		-show_entries "stream_tags=language" \
-		-of "default=noprint_wrappers=1:nokey=1" \
 		"$1"
 }
 
@@ -249,7 +279,7 @@ function ffaudiolang() {
 # pipx install ffmpeg-quality-metrics
 function ffquality() {
 	if [[ $# -eq 0 ]] || [[ $# -eq 1 ]]; then
-		echo "Usage: ${FUNCNAME[0]} <original> <timestamp>"
+		echo "Usage: ${FUNCNAME[0]} <source> <target>"
 		return 1
 	fi
 
@@ -268,5 +298,5 @@ function ffquality() {
         psnr: .psnr.psnr_avg, 
         mse: .psnr.mse_avg 
       }' \
-			>"${directory}/${file_label%.*}.json"
+			>"${directory}/${file_label}.json"
 }
