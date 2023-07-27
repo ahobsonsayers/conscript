@@ -3,61 +3,53 @@
 function fftvpass() {
 	if [[ $# -ne 2 ]]; then
 		echo "Usage: ${FUNCNAME[0]} <input> <output>"
-
 		return 1
 	fi
 
-	# Get names
-	local source_name
-	source_name="$(file_label "$1")" || return 1
-	echo "Source Name: $source_name"
+	echo
 
-	local target_name
-	target_name="$(file_label "$2")" || return 1
-	echo "Target Name: $target_name"
+	# Get files
+	local source_file="$1"
+	echo "Source File: $source_file"
+
+	local target_file="$2"
+	echo "Target File: $target_file"
+
+	local source_name
+	source_name="$(file_label "$source_file")" || return 1
 
 	echo
 
 	# Get source info
 	local source_bitrate
-	source_bitrate="$(ffbitrate "$1")" || return 1
-	echo "Source Bitrate: $source_bitrate"
+	source_bitrate="$(ffbitrate video "$source_file")" || return 1
+	echo "Source Video Bitrate: $source_bitrate"
 
 	local source_width
-	source_width="$(ffwidth "$1")" || return 1
-	echo "Source Width: $source_width"
+	source_width="$(ffwidth "$source_file")" || return 1
+	echo "Source Video Width: $source_width"
 
 	local source_height
-	source_height="$(ffheight "$1")" || return 1
-	echo "Source Height: $source_height"
+	source_height="$(ffheight "$source_file")" || return 1
+	echo "Source Video Height: $source_height"
 
 	local source_crop_height
-	source_crop_height="$(ffcropheight "$1")" || return 1
-	echo "Source Crop Height: $source_crop_height"
+	source_crop_height="$(ffcropheight "$source_file")" || return 1
+	echo "Source Video Crop Height: $source_crop_height"
 
 	local source_colour
-	source_colour="$(ffcolour "$1")" || return 1
-	echo "Source Colour: $source_colour"
+	source_colour="$(ffcolour "$source_file")" || return 1
+	echo "Source Video Colour: $source_colour"
+
+	local source_audio_bitrate
+	source_audio_bitrate="$(ffbitrate audio "$source_file")" || return 1
+	echo "Source Audio Bitrate: $source_audio_bitrate"
 
 	local source_audio_language
-	source_audio_language="$(ffaudiolang "$1")" || return 1
+	source_audio_language="$(ffaudiolang "$source_file")" || return 1
 	echo "Source Audio Language: $source_audio_language"
 
 	echo
-
-	# Get target bitrate and scale params
-	local target_bitrate
-	local scale_params
-	if [ "$source_width" -eq 1920 ]; then
-		echo "Scaling to 720p"
-		scale_params="w=1280:h=-1:downscaler=ewa_lanczos:"
-		# scale_params="zscale=w=1280:h=-1:filter=spline36,"
-	elif [ "$source_width" -eq 1280 ]; then
-		echo "No scaling required. Skipping"
-	else
-		error "Unsupported resolution"
-		return 1
-	fi
 
 	# Get crop params
 	local crop_param
@@ -79,6 +71,8 @@ function fftvpass() {
 	else
 		echo "Mapping colours to BT.709"
 		colour_params="
+			tonemapping=bt.2390:
+			tonemapping_param=0.5:
 			colorspace=bt709:
 			color_primaries=bt709:
 			color_trc=bt709:
@@ -86,14 +80,26 @@ function fftvpass() {
 		"
 	fi
 
-	echo
+	# Get target bitrate and scale params
+	local scale_params
+	if [ "$source_width" -eq 1920 ]; then
+		echo "Scaling to 720p"
+		scale_params="w=1280:h=-1:downscaler=ewa_lanczos:"
+		# scale_params="zscale=w=1280:h=-1:filter=spline36,"
+	elif [ "$source_width" -eq 1280 ]; then
+		echo "No scaling required. Skipping"
+	else
+		error "Unsupported resolution"
+		return 1
+	fi
 
 	# Get pass params and ffmpeg output args depending on pass
+	local pass_num
 	local pass_params
 	local output_args
 	local analysis_file="x265_analysis.dat"
-	if [ "$2" = "-" ]; then
-		echo "First Pass"
+	if [ "$target_file" = "-" ]; then
+		pass_num=1
 		pass_params="
 			pass=1:
 			analysis-save=$analysis_file:
@@ -106,7 +112,7 @@ function fftvpass() {
 			-
 		"
 	else
-		echo "Second Pass"
+		pass_num=2
 		pass_params="
 			pass=2:
 			analysis-load=$analysis_file:
@@ -118,7 +124,6 @@ function fftvpass() {
 			-profile:a aac_he_v2
 			-vbr 5
 			-ac 2
-            -af "aresample=first_pts=0"
 			-map 0:s:m:language:eng?
 			-c:s copy
 			-map_metadata:g -1
@@ -126,39 +131,27 @@ function fftvpass() {
 			-metadata source=\"$source_name\"
 			-metadata:s:a language=\"$source_audio_language\"			
 			-metadata:s:s language=eng
-			-y
-			$2
+			-y \"$target_file\"
 		"
 	fi
-
-	echo
 
 	# Split output args into an array
 	local output_args_array
 	array_parse output_args_array "$output_args"
 
-	# Run ffmpeg
+	echo
+	echo "Encoding pass $pass_num"
+	echo
 	nice ffmpeg \
 		-hide_banner -v warning \
 		-nostdin -stats \
 		-init_hw_device vulkan \
-		-i "$1" \
+		-i "$source_file" \
 		-map 0:v:0 \
 		-c:v libx265 \
 		-profile:v main10 \
-		-b:v "800k" \
+		-b:v 800K \
 		-preset:v slower \
-		-vf "
-			$crop_param
-			hwupload,
-			libplacebo=
-				$colour_params
-				$scale_params
-				deband=true:
-				format=yuv420p10,
-			hwdownload,
-			format=yuv420p10
-		" \
 		-x265-params "
 			bframes=10:
 			ref=6:
@@ -170,12 +163,56 @@ function fftvpass() {
 			psy-rdoq=0.5:
 			$pass_params
 		" \
+		-vf "
+			$crop_param
+			hwupload,
+			libplacebo=
+				$colour_params
+				$scale_params
+				deband=true:
+				format=yuv420p10,
+			hwdownload,
+			format=yuv420p10
+		" \
 		"${output_args_array[@]}" || return 1
 
 	# If output file exists asd stat tags
-	if [[ -f $2 ]]; then
+	if [[ -f "$target_file" ]]; then
+
 		echo
-		echo "Adding statistic tags using mkvpropedit"
+
+		local video_duration
+		video_duration="$(ffduration video "$target_file")"
+		echo "Transcoded Video Duration: $video_duration"
+
+		local audio_start
+		audio_start="$(ffstart audio "$target_file")"
+		echo "Transcoded Audio Offset: $video_duration"
+
+		local remux_file="remux-$target_file"
+
+		echo
+		echo "Remuxing file to sync media tracks"
+		echo
+		ffmpeg \
+			-hide_banner -v warning \
+			-nostdin -stats \
+			-i "$target_file" \
+			-ss "${audio_start#-}" \
+			-to "$video_duration" \
+			-i "$target_file" \
+			-map 0:v \
+			-map 1:a \
+			-map 1:s \
+			-c copy \
+			-copyts \
+			-y "$remux_file"
+
+		# Move remux file to destination
+		mv "$remux_file" "$target_file"
+
+		echo
+		echo "Adding media statistic tags"
 		echo
 		mkvpropedit --add-track-statistics-tags "$2"
 	fi

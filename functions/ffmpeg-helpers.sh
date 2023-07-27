@@ -2,7 +2,7 @@
 
 # Screenshot
 function ffscreenshot() {
-	if [[ $# -eq 0 ]] || [[ $# -eq 1 ]]; then
+	if [ $# -ne 2 ]; then
 		echo "Usage: ${FUNCNAME[0]} <input> <timestamp>"
 		echo "<timestamp> format: H[H]:M[M]:S[S]"
 		return 1
@@ -26,7 +26,7 @@ function ffscreenshot() {
 
 # Cut
 function ffcut() {
-	if [[ $# -eq 0 ]] || [[ $# -eq 1 ]] || [[ $# -eq 2 ]]; then
+	if [ $# -ne 3 ]; then
 		echo "Usage: ${FUNCNAME[0]} <input> <timestamp> <duration>"
 		echo "<timestamp> and <duration> format: H[H]:M[M]:S[S]"
 		return 1
@@ -53,7 +53,7 @@ function ffcut() {
 
 # Get video width
 function ffwidth() {
-	if [[ $# -ne 1 ]]; then
+	if [ $# -ne 1 ]; then
 		echo "Usage: ${FUNCNAME[0]} <input>"
 		return 1
 	fi
@@ -68,7 +68,7 @@ function ffwidth() {
 
 # Get video height
 function ffheight() {
-	if [[ $# -ne 1 ]]; then
+	if [ $# -ne 1 ]; then
 		echo "Usage: ${FUNCNAME[0]} <input>"
 		return 1
 	fi
@@ -83,7 +83,7 @@ function ffheight() {
 
 # Get Crop Height
 function ffcropheight() {
-	if [[ $# -ne 1 ]]; then
+	if [ $# -ne 1 ]; then
 		echo "Usage: ${FUNCNAME[0]} <input>"
 		return 1
 	fi
@@ -91,7 +91,7 @@ function ffcropheight() {
 	local duration
 	local step
 
-	duration=$(ffduration "$1")
+	duration=$(ffdurationseconds "$1")
 	floored_duration=$(floor "$duration")
 	step=$((floored_duration / 11))
 
@@ -112,56 +112,91 @@ function ffcropheight() {
 		tail -1 | awk '{print $2}'
 }
 
-# Get video duration
+# Get duration
 function ffduration() {
-	if [[ $# -ne 1 ]]; then
-		echo "Usage: ${FUNCNAME[0]} <input>"
+	if ! {
+		[[ $# == 1 ]] ||
+			[[ $# == 2 && "$1" =~ ^("general"|"video"|"audio")$ ]]
+	}; then
+		echo "Usage: ${FUNCNAME[0]} [type] <input>"
+		echo "<type> must be one of: general, video, audio"
 		return 1
 	fi
 
-	ffprobe \
-		-hide_banner -v warning \
-		-of "default=noprint_wrappers=1:nokey=1" \
-		-select_streams v:0 \
-		-show_entries "format=duration" \
-		"$1"
+	local type="$1"
+	local file="$2"
+
+	if [ $# -eq 1 ]; then
+		type="general"
+		file="$1"
+	fi
+
+	mediainfo \
+		--Output="${type^};%Duration/String3%" \
+		"$file"
 }
 
-# Get audio duration
-function ffaudioduration() {
-	if [[ $# -ne 1 ]]; then
-		echo "Usage: ${FUNCNAME[0]} <input>"
+# Get duration (in seconds)
+function ffdurationseconds() {
+	if ! {
+		[[ $# == 1 ]] ||
+			[[ $# == 2 && "$1" =~ ^("general"|"video"|"audio")$ ]]
+	}; then
+		echo "Usage: ${FUNCNAME[0]} [type] <input>"
+		echo "[type] must be one of: general, video, audio"
 		return 1
 	fi
 
-	ffprobe \
-		-hide_banner -v warning \
-		-of "default=noprint_wrappers=1:nokey=1" \
-		-select_streams a:0 \
-		-show_entries "format=duration" \
-		"$1"
+	local type="$1"
+	local file="$2"
+
+	if [ $# -eq 1 ]; then
+		type="general"
+		file="$1"
+	fi
+
+	local duration_ms
+	duration_ms="$(
+		mediainfo \
+			--Output="${type^};%Duration%" \
+			"$file"
+	)"
+
+	bc <<<"scale=3; $duration_ms / 1000"
 }
 
-# Print Bitrate
+# Get bitrate
 function ffbitrate() {
-	if [[ $# -ne 1 ]]; then
-		echo "Usage: ${FUNCNAME[0]} <input>"
+	if ! {
+		[[ $# == 1 ]] ||
+			[[ $# == 2 && "$1" =~ ^("general"|"video"|"audio")$ ]]
+	}; then
+		echo "Usage: ${FUNCNAME[0]} [type] <input>"
+		echo "[type] must be one of: general, video, audio"
 		return 1
+	fi
+
+	local type="$1"
+	local file="$2"
+
+	if [ $# -eq 1 ]; then
+		type="general"
+		file="$1"
 	fi
 
 	local bitrate
-	bitrate=$(
+	bitrate="$(
 		mediainfo \
-			--Inform="Video;%BitRate%" \
-			"$1"
-	)
+			--Output="${type^};%BitRate%" \
+			"$file"
+	)"
 
 	echo $((bitrate / 1000))
 }
 
 # Get video colour information
 function ffcolourinfo() {
-	if [[ $# -ne 1 ]]; then
+	if [ $# -ne 1 ]; then
 		echo "Usage: ${FUNCNAME[0]} <input>"
 		return 1
 	fi
@@ -219,7 +254,7 @@ function ffcolour() {
 
 # Count BFrames
 function ffbframes() {
-	if [[ $# -ne 1 ]]; then
+	if [ $# -ne 1 ]; then
 		echo "Usage: ${FUNCNAME[0]} <input>"
 		return 1
 	fi
@@ -231,29 +266,41 @@ function ffbframes() {
 		grep -c "pict_type=B"
 }
 
-function ffaudiostart() {
-	if [[ $# -ne 1 ]]; then
-		echo "Usage: ${FUNCNAME[0]} <input>"
+function ffstart() {
+	if ! {
+		[[ $# == 1 ]] ||
+			[[ $# == 2 && "$1" =~ ^("video"|"audio")$ ]]
+	}; then
+		echo "Usage: ${FUNCNAME[0]} [type] <input>"
+		echo "[type] must be one of: video, audio"
 		return 1
+	fi
+
+	local type="$1"
+	local file="$2"
+
+	if [ $# -eq 1 ]; then
+		type="video"
+		file="$1"
 	fi
 
 	ffprobe \
 		-hide_banner -v warning \
 		-of "default=noprint_wrappers=1:nokey=1" \
-		-select_streams a:0 \
+		-select_streams "${type:0:1}:0" \
 		-show_entries "stream=start_time" \
-		"${1}"
+		"$file"
 }
 
 # get video encode settings
 function ffsettings() {
-	if [[ $# -ne 1 ]]; then
+	if [ $# -ne 1 ]; then
 		echo "Usage: ${FUNCNAME[0]} <input>"
 		return 1
 	fi
 
 	mediainfo \
-		--Inform="Video;%Encoded_Library_Settings%" \
+		--Output="Video;%Encoded_Library_Settings%" \
 		"$1" |
 		sed "s| / |\n|g" |
 		sort
@@ -261,7 +308,7 @@ function ffsettings() {
 
 # get video audio language
 function ffaudiolang() {
-	if [[ $# -ne 1 ]]; then
+	if [ $# -ne 1 ]; then
 		echo "Usage: ${FUNCNAME[0]} <input>"
 		return 1
 	fi
@@ -278,7 +325,7 @@ function ffaudiolang() {
 # https://github.com/slhck/ffmpeg-quality-metrics
 # pipx install ffmpeg-quality-metrics
 function ffquality() {
-	if [[ $# -eq 0 ]] || [[ $# -eq 1 ]]; then
+	if [ $# -ne 2 ]; then
 		echo "Usage: ${FUNCNAME[0]} <source> <target>"
 		return 1
 	fi
