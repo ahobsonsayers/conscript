@@ -97,14 +97,8 @@ function fffilmpass() {
 	local pass_num
 	local pass_params
 	local output_args
-	local analysis_file="x265_analysis.dat"
 	if [ "$target_file" = "-" ]; then
-		pass_num=2
-		pass_params="
-			pass=1:
-			analysis-save=$analysis_file:
-			analysis-save-reuse-level=10
-		"
+		pass_num=1
 		output_args="
 			-an
 			-sn
@@ -113,11 +107,6 @@ function fffilmpass() {
 		"
 	else
 		pass_num=2
-		pass_params="
-			pass=2:
-			analysis-load=$analysis_file:
-			analysis-load-reuse-level=10
-		"
 		output_args="
 			-map 0:a:0
 			-c:a libfdk_aac
@@ -153,13 +142,7 @@ function fffilmpass() {
 		-b:v 2.5M \
 		-preset:v slower \
 		-tune film \
-		-x264-params "
-			bframes=8:
-			ref=6:
-			aq-mode=3:
-			merange=24
-			$pass_params
-    " \
+		-pass "$pass_num" \
 		-vf "
 			$crop_param
 			hwupload,
@@ -171,6 +154,12 @@ function fffilmpass() {
 			hwdownload,
 			format=yuv420p
 		" \
+		-x264-params "
+			bframes=8:
+			ref=6:
+			aq-mode=3:
+			merange=24
+    " \
 		"${output_args_array[@]}" || return 1
 
 	# If output file exists asd stat tags
@@ -184,7 +173,7 @@ function fffilmpass() {
 
 		local audio_start
 		audio_start="$(ffstart audio "$target_file")"
-		echo "Transcoded Audio Offset: $video_duration"
+		echo "Transcoded Audio Offset: $audio_start"
 
 		local remux_file="remux-$target_file"
 

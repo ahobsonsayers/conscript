@@ -152,17 +152,6 @@ function fftvpass() {
 		-profile:v main10 \
 		-b:v 800K \
 		-preset:v slower \
-		-x265-params "
-			bframes=10:
-			ref=6:
-			subme=7:
-			max-merge=5:
-			rd=4:
-			limit-refs=3:
-			psy-rd=0.5:
-			psy-rdoq=0.5:
-			$pass_params
-		" \
 		-vf "
 			$crop_param
 			hwupload,
@@ -173,6 +162,17 @@ function fftvpass() {
 				format=yuv420p10,
 			hwdownload,
 			format=yuv420p10
+		" \
+		-x265-params "
+			bframes=10:
+			ref=6:
+			subme=7:
+			max-merge=5:
+			rd=4:
+			limit-refs=3:
+			psy-rd=0.5:
+			psy-rdoq=0.5:
+			$pass_params
 		" \
 		"${output_args_array[@]}" || return 1
 
@@ -187,7 +187,7 @@ function fftvpass() {
 
 		local audio_start
 		audio_start="$(ffstart audio "$target_file")"
-		echo "Transcoded Audio Offset: $video_duration"
+		echo "Transcoded Audio Offset: $audio_start"
 
 		local remux_file="remux-$target_file"
 
@@ -209,12 +209,12 @@ function fftvpass() {
 			-y "$remux_file"
 
 		# Move remux file to destination
-		mv "$remux_file" "$target_file"
+		# mv "$remux_file" "$target_file"
 
 		echo
 		echo "Adding media statistic tags"
 		echo
-		mkvpropedit --add-track-statistics-tags "$2"
+		mkvpropedit --add-track-statistics-tags "$target_file"
 	fi
 
 	echo
