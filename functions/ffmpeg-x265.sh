@@ -140,7 +140,7 @@ function fftvpass() {
 	array_parse output_args_array "$output_args"
 
 	echo
-	echo "Encoding pass $pass_num"
+	echo "Transcoding pass $pass_num"
 	echo
 	nice ffmpeg \
 		-hide_banner -v warning \
@@ -176,47 +176,44 @@ function fftvpass() {
 		" \
 		"${output_args_array[@]}" || return 1
 
-	# If output file exists asd stat tags
+	# If output file exists, do extra steps
 	if [[ -f "$target_file" ]]; then
 
 		echo
+		echo "Syncing audio track"
+		echo
 
-		local video_duration
-		video_duration="$(ffduration video "$target_file")"
-		echo "Transcoded Video Duration: $video_duration"
+		# Create temp file for modification
+		local temp_file="temp-$target_file"
+		cp "$target_file" "$temp_file"
 
-		local audio_start
-		audio_start="$(ffstart audio "$target_file")"
-		echo "Transcoded Audio Offset: $audio_start"
-
-		local remux_file="remux-$target_file"
+		# Remove codec delay property
+		mkvpropedit \
+			-e track:a1 \
+			-d codec-delay \
+			"$temp_file" \
+			1>/dev/null
 
 		echo
-		echo "Remuxing file to sync media tracks"
-		echo
-		ffmpeg \
-			-hide_banner -v warning \
-			-nostdin -stats \
-			-i "$target_file" \
-			-ss "${audio_start#-}" \
-			-to "$video_duration" \
-			-i "$target_file" \
-			-map 0:v \
-			-map 1:a \
-			-map 1:s \
-			-c copy \
-			-copyts \
-			-y "$remux_file"
 
-		# Move remux file to destination
-		# mv "$remux_file" "$target_file"
+		# Sync and trim audio track
+		# overwriting original file
+		mkvmerge \
+			--sync 1:-148 \
+			--stop-after-video-ends \
+			-o "$target_file" \
+			"$temp_file" \
+			1>/dev/null
 
-		echo
-		echo "Adding media statistic tags"
-		echo
-		mkvpropedit --add-track-statistics-tags "$target_file"
+		# Remove temp file
+		rm "$temp_file"
+
+		echo "Completed syncing audio track"
+
 	fi
 
+	echo
+	echo "Finished transcoding pass $pass_num"
 	echo
 }
 
