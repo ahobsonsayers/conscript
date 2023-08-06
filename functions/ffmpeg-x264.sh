@@ -129,7 +129,7 @@ function fffilmpass() {
 	array_parse output_args_array "$output_args"
 
 	echo
-	echo "Encoding pass $pass_num"
+	echo "Transcoding pass $pass_num"
 	echo
 	nice ffmpeg \
 		-hide_banner -v warning \
