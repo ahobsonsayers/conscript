@@ -8,6 +8,7 @@ function abspath() {
 	# From https://stackoverflow.com/a/23002317
 	if [ -d "$1" ]; then
 		(
+			# shellcheck disable=SC2164
 			cd "$1"
 			pwd
 		)
@@ -16,6 +17,7 @@ function abspath() {
 			echo "$1"
 		elif [[ $1 == */* ]]; then
 			echo "$(
+				# shellcheck disable=SC2164
 				cd "${1%/*}"
 				pwd
 			)/${1##*/}"
@@ -35,6 +37,21 @@ function array_parse() {
 		return 1
 	fi
 	readarray -t "$1" < <(xargs -n1 <<<"$2")
+}
+
+function array_parse_lines() {
+	if [ $# -ne 1 ]; then
+		echo "Usage: ${FUNCNAME[0]} <var> [strings...]"
+		return 1
+	fi
+
+	local -n array="$1" # -n declares the variable is a reference
+
+	while IFS= read -r line; do
+		if ! is_blank "$line"; then
+			array+=("$line")
+		fi
+	done
 }
 
 function file_name() {
@@ -74,7 +91,7 @@ function floor() {
 		return 1
 	fi
 
-	echo $1 | cut -d . -f 1
+	cut -d . -f 1 <<<"$1"
 }
 
 function ceil() {
@@ -83,56 +100,90 @@ function ceil() {
 		return 1
 	fi
 
-	floored="$(floor $1)"
+	floored="$(floor "$1")"
 	echo $((floored + 1))
 }
 
+function error() {
+	echo "$@" 1>&2
+}
+
 is_blank() {
-  local stripped="$(
-    echo "$1" | 
-    tr -d '[:space:]'
-   )"
-  if [ -z "$stripped" ]; then
-    return 0
-  else
-    return 1
-  fi
+	local stripped
+	stripped="$(tr -d '[:space:]' <<<"$1")"
+
+	if [ -z "$stripped" ]; then
+		return 0
+	else
+		return 1
+	fi
 }
 
 count() {
-    local count=0
-    while IFS= read -r line; do
-        if ! is_blank "$line" ; then
-            count=$((count+1))
-        fi
-    done
-    echo "$count"
+	local count=0
+	while IFS= read -r line; do
+		if ! is_blank "$line"; then
+			count=$((count + 1))
+		fi
+	done
+	echo "$count"
 }
 
 sum() {
-  local sum=0
-  while IFS= read -r line; do
-    if ! is_blank "$line" ; then
-      sum=$(echo "$sum + $line" | bc -l)
-    fi
-  done
-  echo "$sum"
+	local sum=0
+	while IFS= read -r line; do
+		if ! is_blank "$line"; then
+			sum=$(bc -l <<<"$sum + $line")
+		fi
+	done
+	echo "$sum"
 }
 
 mean() {
-  local sum=$(sum)
-  local count=$(count <<< "$1")
-  echo $sum
-  echo $count
-  
-  if [ "$count" -eq 0 ]; then
-    error "count is 0"
-    return 1
-  fi
-  
-  echo "$(
-    echo "$sum / $count" | 
-    bc -l
-  )"
+	local input
+	input="$(cat)"
+
+	local sum_result
+	sum_result=$(sum <<<"$input")
+
+	local count_result
+	count_result=$(count <<<"$input")
+	if [ "$count_result" -eq 0 ]; then
+		error "count is 0"
+		return 1
+	fi
+
+	bc -l <<<"$sum_result / $count_result"
 }
 
+median() {
+	local input
+	input="$(cat)"
+
+	# Read numbers into an array
+	local num_array
+	array_parse_lines num_array <<<"$input"
+
+	# Sort numbers
+	local sorted_num_array
+	readarray -t sorted_num_array < <(printf "%s\n" "${num_array[@]}" | sort -n)
+
+	local count_result
+	count_result=$(count <<<"$input")
+	if [ "$count_result" -eq 0 ]; then
+		error "count is 0"
+		return 1
+	fi
+
+	# Calculate median
+	local idx=$((count / 2))
+	local mid_num=${sorted_num_array[idx1]}
+
+	if [ $((count % 2)) -ne 0 ]; then
+		local idx2=$((idx + 1))
+		local mid_num2=${sorted_num_array[idx2]}
+		bc -l <<<"($mid_num + $mid_num2) / 2"
+	else
+		echo "$mid_num"
+	fi
+}
