@@ -86,3 +86,53 @@ function ceil() {
 	floored="$(floor $1)"
 	echo $((floored + 1))
 }
+
+is_blank() {
+  local stripped="$(
+    echo "$1" | 
+    tr -d '[:space:]'
+   )"
+  if [ -z "$stripped" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+count() {
+    local count=0
+    while IFS= read -r line; do
+        if ! is_blank "$line" ; then
+            count=$((count+1))
+        fi
+    done
+    echo "$count"
+}
+
+sum() {
+  local sum=0
+  while IFS= read -r line; do
+    if ! is_blank "$line" ; then
+      sum=$(echo "$sum + $line" | bc -l)
+    fi
+  done
+  echo "$sum"
+}
+
+mean() {
+  local sum=$(sum)
+  local count=$(count <<< "$1")
+  echo $sum
+  echo $count
+  
+  if [ "$count" -eq 0 ]; then
+    error "count is 0"
+    return 1
+  fi
+  
+  echo "$(
+    echo "$sum / $count" | 
+    bc -l
+  )"
+}
+
