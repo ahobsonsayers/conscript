@@ -67,7 +67,8 @@ function audio_quality() {
       -codec:a pcm_s16le \
       -ac 2 \
       -ar 48000 \
-      "$source_wav" || return 1
+      "$source_wav" ||
+      return 1
     echo
   fi
 
@@ -81,8 +82,34 @@ function audio_quality() {
       -codec:a pcm_s16le \
       -ac 2 \
       -ar 48000 \
-      "$target_wav" || return 1
+      "$target_wav" ||
+      return 1
     echo
+  fi
+
+  # Check if files are out of sync
+  local diff_result
+  local diff_file
+  local diff_time
+  diff_result="$(audio_diff "$source_wav" "$target_wav")"
+  diff_file="$(cut -d " " -f 1 <<<"$diff_result")"
+  diff_time="$(cut -d " " -f 2 <<<"$diff_result")"
+
+  # Sync files if required
+  if [ "$diff_time" -ne 0 ]; then
+    local sync_file="sync-$diff_file"
+
+    echo "Syncing audio files"
+    ffmpeg \
+      -hide_banner -v warning \
+      -nostdin -stats \
+      -i "$diff_file" \
+      -ss "$diff_time" \
+      "$sync_file" ||
+      return 1
+    echo
+
+    mv "$sync_file" "$diff_file"
   fi
 
   echo "Measuring audio quality"
@@ -94,7 +121,6 @@ function audio_quality() {
       grep "ODG:" |
       cut -d " " -f 2
   )"
-
   if [ -z "$results" ]; then
     return 1
   fi
@@ -129,7 +155,7 @@ function audio_quality() {
   echo "Written results to $output_json"
 }
 
-function audio_difference() {
+function audio_diff() {
   if [ $# -ne 2 ]; then
     echo "Usage: ${FUNCNAME[0]} <source> <target>"
     return 1
@@ -144,9 +170,9 @@ function audio_difference() {
   )"
 
   local filename
-  local delay
+  local time
   filename="$(cut -d " " -f 1 <<<"$result")"
-  delay="$(cut -d " " -f 2 <<<"$result")"
+  time="$(cut -d " " -f 2 <<<"$result")"
 
-  printf "%s %.6f\n" "$filename" "$delay"
+  printf "%s %g\n" "$filename" "$time"
 }
