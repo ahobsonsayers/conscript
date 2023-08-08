@@ -10,14 +10,15 @@ function video_quality() {
     return 1
   fi
 
-  local output_directory
+  local output_dir
   local output_label
-  local output_path
+  local output_json
 
-  output_directory="$(dirname "$2")"
+  output_dir="$(dirname "$2")"
   output_label="$(file_label "$2")"
-  output_path="${output_directory}/${output_label}.json"
+  output_json="${output_dir}/${output_label}.json"
 
+  echo "Measuring video quality"
   ffmpeg-quality-metrics "$2" "$1" \
     -s lanczos \
     -m vmaf ssim psnr |
@@ -27,7 +28,9 @@ function video_quality() {
         psnr: .psnr.psnr_avg, 
         mse: .psnr.mse_avg 
       }' \
-      >"$output_path"
+      >"$output_json"
+
+  echo "Written results to $output_json"
 }
 
 function audio_quality() {
@@ -36,22 +39,65 @@ function audio_quality() {
     return 1
   fi
 
-  local output_directory
-  local output_label
-  local output_path
+  local source_dir
+  local source_label
+  local source_wav
+  source_dir="$(dirname "$1")"
+  source_label="$(file_label "$1")"
+  source_wav="${source_dir}/${source_label}.wav"
 
-  output_directory="$(dirname "$2")"
-  output_label="$(file_label "$2")"
-  output_path="${output_directory}/${output_label}.json"
+  local target_dir
+  local target_label
+  local target_wav
+  target_dir="$(dirname "$2")"
+  target_label="$(file_label "$2")"
+  target_wav="${target_dir}/${target_label}.wav"
 
+  local output_json
+  output_json="${target_dir}/${target_label}.json"
+
+  # Convert source and target audio to wav (if required)
+  if [ ! -f "$source_wav" ]; then
+    echo "Converting source audio to wav"
+    ffmpeg \
+      -hide_banner -v warning \
+      -nostdin -stats \
+      -i "$1" \
+      -map a:0 \
+      -codec:a pcm_s16le \
+      -ac 2 \
+      -ar 48000 \
+      "$source_wav" || return 1
+    echo
+  fi
+
+  if [ ! -f "$target_wav" ]; then
+    echo "Converting target audio to wav"
+    ffmpeg \
+      -hide_banner -v warning \
+      -nostdin -stats \
+      -i "$2" \
+      -map a:0 \
+      -codec:a pcm_s16le \
+      -ac 2 \
+      -ar 48000 \
+      "$target_wav" || return 1
+    echo
+  fi
+
+  echo "Measuring audio quality"
   local results
   results="$(
     peaqb \
-      -r "$1" \
-      -t "$2" |
+      -r "$source_wav" \
+      -t "$target_wav" |
       grep "ODG:" |
       cut -d " " -f 2
-  )" || return 1
+  )"
+
+  if [ -z "$results" ]; then
+    return 1
+  fi
 
   local mean
   local median
@@ -78,5 +124,29 @@ function audio_quality() {
       "min": $min,
       "max": $max
     }' \
-    >"$output_path"
+    >"$output_json"
+
+  echo "Written results to $output_json"
+}
+
+function audio_difference() {
+  if [ $# -ne 2 ]; then
+    echo "Usage: ${FUNCNAME[0]} <source> <target>"
+    return 1
+  fi
+
+  local result
+  result="$(
+    syncstart "$1" "$2" -st 120 \
+      2>&1 |
+      tail -n 1 |
+      sed "s|[\(\)',]||g"
+  )"
+
+  local filename
+  local delay
+  filename="$(cut -d " " -f 1 <<<"$result")"
+  delay="$(cut -d " " -f 2 <<<"$result")"
+
+  printf "%s %.6f\n" "$filename" "$delay"
 }
