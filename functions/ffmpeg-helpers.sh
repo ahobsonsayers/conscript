@@ -2,7 +2,7 @@
 
 # Screenshot
 function ffscreenshot() {
-  if [ $# -ne 2 ]; then
+  if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <timestamp>"
     echo "<timestamp> format: H[H]:M[M]:S[S]"
     return 1
@@ -26,7 +26,7 @@ function ffscreenshot() {
 
 # Cut
 function ffcut() {
-  if [ $# -ne 3 ]; then
+  if [[ $# -ne 3 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <timestamp> <duration>"
     echo "<timestamp> and <duration> format: H[H]:M[M]:S[S]"
     return 1
@@ -53,7 +53,7 @@ function ffcut() {
 
 # Get video width
 function ffwidth() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
   fi
@@ -68,7 +68,7 @@ function ffwidth() {
 
 # Get video height
 function ffheight() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
   fi
@@ -83,7 +83,7 @@ function ffheight() {
 
 # Get Crop Height
 function ffcropheight() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
   fi
@@ -126,7 +126,7 @@ function ffduration() {
   local type="$1"
   local file="$2"
 
-  if [ $# -eq 1 ]; then
+  if [[ $# -eq 1 ]]; then
     type="general"
     file="$1"
   fi
@@ -150,7 +150,7 @@ function ffdurationseconds() {
   local type="$1"
   local file="$2"
 
-  if [ $# -eq 1 ]; then
+  if [[ $# -eq 1 ]]; then
     type="general"
     file="$1"
   fi
@@ -179,7 +179,7 @@ function ffbitrate() {
   local type="$1"
   local file="$2"
 
-  if [ $# -eq 1 ]; then
+  if [[ $# -eq 1 ]]; then
     type="general"
     file="$1"
   fi
@@ -196,7 +196,7 @@ function ffbitrate() {
 
 # Get video colour information
 function ffcolourinfo() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
   fi
@@ -254,7 +254,7 @@ function ffcolour() {
 
 # Count BFrames
 function ffbframes() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
   fi
@@ -279,7 +279,7 @@ function ffstart() {
   local type="$1"
   local file="$2"
 
-  if [ $# -eq 1 ]; then
+  if [[ $# -eq 1 ]]; then
     type="video"
     file="$1"
   fi
@@ -294,7 +294,7 @@ function ffstart() {
 
 # get video encode settings
 function ffsettings() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
   fi
@@ -308,7 +308,7 @@ function ffsettings() {
 
 # get video audio language
 function ffaudiolang() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
   fi
@@ -317,6 +317,4 @@ function ffaudiolang() {
     -hide_banner -v warning \
     -of "default=noprint_wrappers=1:nokey=1" \
     -select_streams a:0 \
-    -show_entries "stream_tags=language" \
-    "$1"
-}
+    -show_entries "stream_ta

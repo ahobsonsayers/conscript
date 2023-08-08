@@ -7,9 +7,9 @@
 # st
 # ffmpeg
 
-function install_peaqb(){
+function install_peaqb() {
   git clone https://github.com/akinori-ito/peaqb-fast
-  cd peaqb-fast
+  cd peaqb-fast || return 1
   ./configure
   make
   cp -f ./src/peaqb ~/.local/bin

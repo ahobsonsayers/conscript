@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-calculate() {
-  if [ $# -ne 1 ]; then
+calc() {
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <expression>"
     return 1
   fi
@@ -10,7 +10,7 @@ calculate() {
 }
 
 function floor() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <number>"
     return 1
   fi
@@ -19,7 +19,7 @@ function floor() {
 }
 
 function ceil() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <number>"
     return 1
   fi
@@ -33,8 +33,8 @@ min() {
   local min_value
   while IFS= read -r num; do
     if ! is_blank "$num" && {
-      [ -z "$min_value" ] ||
-        [ "$(calculate "$num < $min_value")" -eq 1 ]
+      [[ -z $min_value ]] ||
+        [[ "$(calc "$num < $min_value")" -eq 1 ]]
     }; then
       min_value="$num"
     fi
@@ -48,8 +48,8 @@ max() {
   local max_value
   while IFS= read -r num; do
     if ! is_blank "$num" && {
-      [ -z "$max_value" ] ||
-        [ "$(calculate "$num > $max_value")" -eq 1 ]
+      [[ -z $max_value ]] ||
+        [[ "$(calculate "$num > $max_value")" -eq 1 ]]
     }; then
       max_value="$num"
     fi
@@ -78,7 +78,7 @@ mean() {
   local count_result
   count_result=$(count <<<"$input")
 
-  if [ "$count_result" -eq 0 ]; then
+  if [[ $count_result -eq 0 ]]; then
     error "count is 0"
     return 1
   fi
@@ -93,7 +93,7 @@ median() {
   local count_result
   count_result=$(count <<<"$input")
 
-  if [ "$count_result" -eq 0 ]; then
+  if [[ $count_result -eq 0 ]]; then
     error "count is 0"
     return 1
   fi
@@ -110,10 +110,10 @@ median() {
   local idx=$((count_result / 2))
   local mid_num=${sorted_num_array[idx]}
 
-  if [ $((count_result % 2)) -eq 0 ]; then
+  if [[ $((count_result % 2)) -eq 0 ]]; then
     local idx2=$((idx - 1))
     local mid_num2=${sorted_num_array[idx2]}
-    calculate "($mid_num + $mid_num2) / 2"
+    calc "($mid_num + $mid_num2) / 2"
   else
     echo "$mid_num"
   fi

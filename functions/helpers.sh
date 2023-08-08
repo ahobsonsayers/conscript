@@ -6,13 +6,13 @@ function error() {
 
 function abspath() {
   # From https://stackoverflow.com/a/23002317
-  if [ -d "$1" ]; then
+  if [[ -d $1 ]]; then
     (
       # shellcheck disable=SC2164
       cd "$1"
       pwd
     )
-  elif [ -f "$1" ]; then
+  elif [[ -f $1 ]]; then
     if [[ $1 == /* ]]; then
       echo "$1"
     elif [[ $1 == */* ]]; then
@@ -32,7 +32,7 @@ function abspath() {
 
 function array_parse() {
   # From https://stackoverflow.com/a/61474683
-  if [ $# -ne 2 ]; then
+  if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <var> <string>"
     return 1
   fi
@@ -40,7 +40,7 @@ function array_parse() {
 }
 
 function array_parse_lines() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <var> [strings...]"
     return 1
   fi
@@ -55,7 +55,7 @@ function array_parse_lines() {
 }
 
 function file_name() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <path>"
     return 1
   fi
@@ -64,7 +64,7 @@ function file_name() {
 }
 
 function file_label() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <path>"
     return 1
   fi
@@ -75,7 +75,7 @@ function file_label() {
 }
 
 function file_extension() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <path>"
     return 1
   fi
@@ -89,7 +89,7 @@ is_blank() {
   local stripped
   stripped="$(tr -d '[:space:]' <<<"$1")"
 
-  if [ -z "$stripped" ]; then
+  if [[ -z $stripped ]]; then
     return 0
   else
     return 1

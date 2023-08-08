@@ -5,18 +5,18 @@
 # https://github.com/slhck/ffmpeg-quality-metrics
 # pipx install ffmpeg-quality-metrics
 function video_quality() {
-  if [ $# -ne 2 ]; then
+  if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <source> <target>"
     return 1
   fi
 
   local output_dir
-  local output_label
-  local output_json
-
   output_dir="$(dirname "$2")"
+
+  local output_label
   output_label="$(file_label "$2")"
-  output_json="${output_dir}/${output_label}.json"
+
+  local output_json="${output_dir}/${output_label}.json"
 
   echo "Measuring video quality"
   ffmpeg-quality-metrics "$2" "$1" \
@@ -34,30 +34,27 @@ function video_quality() {
 }
 
 function audio_quality() {
-  if [ $# -ne 2 ]; then
+  if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <source> <target>"
     return 1
   fi
 
   local source_dir
-  local source_label
-  local source_wav
-  source_dir="$(dirname "$1")"
-  source_label="$(file_label "$1")"
-  source_wav="${source_dir}/${source_label}.wav"
-
   local target_dir
-  local target_label
-  local target_wav
+  source_dir="$(dirname "$1")"
   target_dir="$(dirname "$2")"
-  target_label="$(file_label "$2")"
-  target_wav="${target_dir}/${target_label}.wav"
 
-  local output_json
-  output_json="${target_dir}/${target_label}.json"
+  local source_label
+  local target_label
+  source_label="$(file_label "$1")"
+  target_label="$(file_label "$2")"
+
+  local source_wav="${source_dir}/${source_label}.wav"
+  local target_wav="${target_dir}/${target_label}.wav"
+  local output_json="${target_dir}/${target_label}.json"
 
   # Convert source and target audio to wav (if required)
-  if [ ! -f "$source_wav" ]; then
+  if [[ ! -f $source_wav ]]; then
     echo "Converting source audio to wav"
     ffmpeg \
       -hide_banner -v warning \
@@ -72,7 +69,7 @@ function audio_quality() {
     echo
   fi
 
-  if [ ! -f "$target_wav" ]; then
+  if [[ ! -f $target_wav ]]; then
     echo "Converting target audio to wav"
     ffmpeg \
       -hide_banner -v warning \
@@ -96,8 +93,15 @@ function audio_quality() {
   diff_time="$(cut -d " " -f 2 <<<"$diff_result")"
 
   # Sync files if required
-  if [ "$diff_time" -ne 0 ]; then
-    local sync_file="sync-$diff_file"
+  if [[ $diff_time != 0 ]]; then
+
+    local diff_dir
+    diff_dir="$(dirname "$diff_file")"
+
+    local diff_label
+    diff_label="$(file_label "$diff_file")"
+
+    local sync_file="${diff_dir}/sync-${diff_label}.wav"
 
     echo "Syncing audio files"
     ffmpeg \
@@ -121,7 +125,7 @@ function audio_quality() {
       grep "ODG:" |
       cut -d " " -f 2
   )"
-  if [ -z "$results" ]; then
+  if [[ -z $results ]]; then
     return 1
   fi
 
@@ -156,7 +160,7 @@ function audio_quality() {
 }
 
 function audio_diff() {
-  if [ $# -ne 2 ]; then
+  if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <source> <target>"
     return 1
   fi

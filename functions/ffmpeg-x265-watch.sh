@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function fftv_watch() {
-  if [ $# -ne 1 ]; then
+  if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <directory>"
     return 1
   fi
@@ -52,6 +52,7 @@ function fftv_watch() {
       local output_path
 
       output_name="$(
+        # shellcheck disable=SC2016
         echo "$input_name" |
           sd -f i '(amzn|dnsp|hmax|atmos)' '' |
           sd -f i '[ .()-]+' '.' |
@@ -67,6 +68,7 @@ function fftv_watch() {
       echo "Transcoding $input_name to $output_name"
       echo
 
+      # shellcheck disable=SC2015
       fftv "$input_path" "$output_path" &&
         mv "$input_path" "$complete_dir" ||
         mv "$input_path" "$error_dir"

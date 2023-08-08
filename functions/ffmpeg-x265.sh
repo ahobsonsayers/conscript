@@ -53,7 +53,7 @@ function fftvpass() {
 
   # Get crop params
   local crop_param
-  if [ "$source_crop_height" -lt "$((source_height - 2))" ]; then
+  if [[ $source_crop_height -lt "$((source_height - 2))" ]]; then
     echo "Cropping to a height of $source_crop_height"
     crop_param="crop=iw:${source_crop_height},"
     # libplacebo cropping. Doesnt seem to work atm
@@ -64,9 +64,9 @@ function fftvpass() {
 
   # Get colour param
   local colour_params
-  if [ -z "$source_colour" ] || [ "$source_colour" = "unknown" ]; then
+  if [[ -z $source_colour ]] || [[ $source_colour == "unknown" ]]; then
     echo "Unknown source colour. Skipping colour mapping"
-  elif [ "$source_colour" = "bt709" ]; then
+  elif [[ $source_colour == "bt709" ]]; then
     echo "No colour mapping required. Skipping"
   else
     echo "Mapping colours to BT.709"
@@ -82,11 +82,11 @@ function fftvpass() {
 
   # Get target bitrate and scale params
   local scale_params
-  if [ "$source_width" -eq 1920 ]; then
+  if [[ $source_width -eq 1920 ]]; then
     echo "Scaling to 720p"
     scale_params="w=1280:h=-1:downscaler=ewa_lanczos:"
     # scale_params="zscale=w=1280:h=-1:filter=spline36,"
-  elif [ "$source_width" -eq 1280 ]; then
+  elif [[ $source_width -eq 1280 ]]; then
     echo "No scaling required. Skipping"
   else
     error "Unsupported resolution"
@@ -98,7 +98,7 @@ function fftvpass() {
   local pass_params
   local output_args
   local analysis_file="x265_analysis.dat"
-  if [ "$target_file" = "-" ]; then
+  if [[ $target_file == "-" ]]; then
     pass_num=1
     pass_params="
 			pass=1:
