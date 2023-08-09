@@ -25,7 +25,7 @@ function ceil() {
   fi
 
   floored="$(floor "$1")"
-  calculate "$floored + 1"
+  calc "$floored + 1"
 }
 
 min() {
@@ -49,7 +49,7 @@ max() {
   while IFS= read -r num; do
     if ! is_blank "$num" && {
       [[ -z $max_value ]] ||
-        [[ "$(calculate "$num > $max_value")" -eq 1 ]]
+        [[ "$(calc "$num > $max_value")" -eq 1 ]]
     }; then
       max_value="$num"
     fi
@@ -62,7 +62,7 @@ sum() {
   local sum=0
   while IFS= read -r num; do
     if ! is_blank "$num"; then
-      sum=$(calculate "$sum + $num")
+      sum=$(calc "$sum + $num")
     fi
   done
   echo "$sum"
@@ -83,7 +83,7 @@ mean() {
     return 1
   fi
 
-  calculate "$sum_result / $count_result"
+  calc "$sum_result / $count_result"
 }
 
 median() {

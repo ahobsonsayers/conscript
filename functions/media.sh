@@ -55,7 +55,7 @@ function audio_quality() {
 
   # Convert source and target audio to wav (if required)
   if [[ ! -f $source_wav ]]; then
-    echo "Converting source audio to wav"
+    echo "Converting $1 audio to wav"
     ffmpeg \
       -hide_banner -v warning \
       -nostdin -stats \
@@ -70,7 +70,7 @@ function audio_quality() {
   fi
 
   if [[ ! -f $target_wav ]]; then
-    echo "Converting target audio to wav"
+    echo "Converting $2 audio to wav"
     ffmpeg \
       -hide_banner -v warning \
       -nostdin -stats \
@@ -103,7 +103,7 @@ function audio_quality() {
 
     local sync_file="${diff_dir}/sync-${diff_label}.wav"
 
-    echo "Syncing audio files"
+    echo "Trimming $diff_file by ${diff_time}s to sync audio"
     ffmpeg \
       -hide_banner -v warning \
       -nostdin -stats \

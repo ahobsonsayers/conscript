@@ -317,4 +317,6 @@ function ffaudiolang() {
     -hide_banner -v warning \
     -of "default=noprint_wrappers=1:nokey=1" \
     -select_streams a:0 \
-    -show_entries "stream_ta
+    -show_entries "stream_tags=language" \
+    "$1"
+}
