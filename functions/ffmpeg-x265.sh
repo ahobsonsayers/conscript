@@ -15,8 +15,15 @@ function fftvpass() {
   local target_file="$2"
   echo "Target File: $target_file"
 
-  local source_name
-  source_name="$(file_label "$source_file")" || return 1
+  local source_label
+  source_label="$(file_label "$source_file")" || return 1
+
+  local target_dir
+  local target_label
+  local target_extension
+  target_dir="$(dirname "$target_file")" || return 1
+  target_label="$(file_label "$target_file")" || return 1
+  target_extension="$(file_extension "$target_file")" || return 1
 
   echo
 
@@ -33,8 +40,11 @@ function fftvpass() {
   source_height="$(ffheight "$source_file")" || return 1
   echo "Source Video Height: $source_height"
 
+  # Get crop height, as a multiple of 4
+  # (as libplacebo operates in yuv444 space)
   local source_crop_height
   source_crop_height="$(ffcropheight "$source_file")" || return 1
+  source_crop_height=$(((source_crop_height + 3) / 4 * 4))
   echo "Source Video Crop Height: $source_crop_height"
 
   local source_colour
@@ -53,8 +63,9 @@ function fftvpass() {
 
   # Get crop params
   local crop_param
-  if [[ $source_crop_height -lt "$((source_height - 2))" ]]; then
+  if [[ $source_crop_height -lt "$((source_height - 12))" ]]; then
     echo "Cropping to a height of $source_crop_height"
+
     crop_param="crop=iw:${source_crop_height},"
     # libplacebo cropping. Doesnt seem to work atm
     # crop_param="crop_h=$source_crop_height:"
@@ -111,7 +122,7 @@ function fftvpass() {
 			-f null
 			-
 		"
-  else
+  elif [[ $target_extension == "mkv" ]]; then
     pass_num=2
     pass_params="
 			pass=2:
@@ -128,11 +139,14 @@ function fftvpass() {
 			-c:s copy
 			-map_metadata:g -1
 			-map_metadata:s -1
-			-metadata source=\"$source_name\"
+			-metadata source=\"$source_label\"
 			-metadata:s:a language=\"$source_audio_language\"			
 			-metadata:s:s language=eng
 			-y \"$target_file\"
 		"
+  else
+    error "Target must be an mkv"
+    return 1
   fi
 
   # Split output args into an array
@@ -141,8 +155,7 @@ function fftvpass() {
 
   echo
   echo "Transcoding pass $pass_num"
-  echo
-  nice ffmpeg \
+  echonice ffmpeg \
     -hide_banner -v warning \
     -nostdin -stats \
     -init_hw_device vulkan \
@@ -176,43 +189,42 @@ function fftvpass() {
 		" \
     "${output_args_array[@]}" || return 1
 
+  echo
+
   # If output file exists, do extra steps
   if [[ -f $target_file ]]; then
 
-    echo
     echo "Syncing audio track"
-    echo
 
-    # Create temp file for modification
-    local temp_file="temp-$target_file"
-    cp "$target_file" "$temp_file"
+    # Create temp file for syncing
+    local sync_file="$target_dir/sync-$target_label.$target_extension"
+    cp "$target_file" "$sync_file"
 
     # Remove codec delay property
     mkvpropedit \
       -e track:a1 \
       -d codec-delay \
-      "$temp_file" \
+      "$sync_file" \
       1>/dev/null
-
-    echo
 
     # Sync and trim audio track
     # overwriting original file
+    # Statistic metadata os also written
     mkvmerge \
       --sync 1:-148 \
       --stop-after-video-ends \
       -o "$target_file" \
-      "$temp_file" \
+      "$sync_file" \
       1>/dev/null
 
-    # Remove temp file
-    rm "$temp_file"
+    # Remove sync file
+    rm "$sync_file"
 
     echo "Completed syncing audio track"
+    echo
 
   fi
 
-  echo
   echo "Finished transcoding pass $pass_num"
   echo
 }

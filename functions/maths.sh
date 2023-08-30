@@ -6,7 +6,7 @@ calc() {
     return 1
   fi
 
-  awk "BEGIN { print $1}"
+  awk "BEGIN { print $1 }"
 }
 
 function floor() {
@@ -53,6 +53,25 @@ max() {
     }; then
       max_value="$num"
     fi
+  done
+
+  echo "$max_value"
+}
+
+max() {
+  local max_value
+
+  while IFS= read -r line; do
+    while IFS=$'\t , ' read -r -a numbers; do
+      for num in "${numbers[@]}"; do
+        if ! is_blank "$num" && {
+      [[ -z $max_value ]] ||
+        [[ "$(calc "$num > $max_value")" -eq 1 ]]
+    }; then
+      max_value="$num"
+    fi
+      done
+    done <<< "$line"
   done
 
   echo "$max_value"
