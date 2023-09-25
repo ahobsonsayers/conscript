@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-function fftv2pass() {
+function fftvpass() {
   if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <output>"
     return 1
@@ -104,13 +104,57 @@ function fftv2pass() {
     return 1
   fi
 
-  if [[ $target_extension != "mkv" ]]; then
+  # Get pass params and ffmpeg output args depending on pass
+  local pass_num
+  local pass_params
+  local output_args
+  local analysis_file="x265_analysis.dat"
+  if [[ $target_file == "-" ]]; then
+    pass_num=1
+    pass_params="
+			pass=1:
+			analysis-save=$analysis_file:
+			analysis-save-reuse-level=10
+		"
+    output_args="
+			-an
+			-sn
+			-f null
+			-
+		"
+  elif [[ $target_extension == "mkv" ]]; then
+    pass_num=2
+    pass_params="
+			pass=2:
+			analysis-load=$analysis_file:
+			analysis-load-reuse-level=10
+		"
+    output_args="
+			-map 0:a:0
+			-c:a libfdk_aac
+			-profile:a aac_he_v2
+			-vbr 5
+			-ac 2
+			-map 0:s:m:language:eng?
+			-c:s copy
+			-map_metadata:g -1
+			-map_metadata:s -1
+			-metadata source=\"$source_label\"
+			-metadata:s:a language=\"$source_audio_language\"			
+			-metadata:s:s language=eng
+			-y \"$target_file\"
+		"
+  else
     error "Target must be an mkv"
     return 1
   fi
 
+  # Split output args into an array
+  local output_args_array
+  array_parse output_args_array "$output_args"
+
   echo
-  echo "Transcoding"
+  echo "Transcoding pass $pass_num"
   echo
   nice ffmpeg \
     -hide_banner -v warning \
@@ -120,7 +164,7 @@ function fftv2pass() {
     -map 0:v:0 \
     -c:v libx265 \
     -profile:v main10 \
-    -crf:v 22 \
+    -b:v 800K \
     -preset:v slower \
     -vf "
 			$crop_param
@@ -140,22 +184,11 @@ function fftv2pass() {
 			max-merge=5:
 			rd=4:
 			limit-refs=3:
-			psy-rd=1:
-			psy-rdoq=1
+			psy-rd=0.5:
+			psy-rdoq=0.5:
+			$pass_params
 		" \
-    -map 0:a:0 \
-    -c:a libfdk_aac \
-    -profile:a aac_he_v2 \
-    -vbr 5 \
-    -ac 2 \
-    -map 0:s:m:language:eng? \
-    -c:s copy \
-    -map_metadata:g -1 \
-    -map_metadata:s -1 \
-    -metadata source="$source_label" \
-    -metadata:s:a language="$source_audio_language" \
-    -metadata:s:s language=eng \
-    -y "$target_file" || return 1
+    "${output_args_array[@]}" || return 1
 
   echo
 
@@ -193,6 +226,17 @@ function fftv2pass() {
 
   fi
 
-  echo "Finished transcoding"
+  echo "Finished transcoding pass $pass_num"
   echo
+}
+
+function fftv() {
+  if [[ $# -ne 2 ]]; then
+    echo "Usage: ${FUNCNAME[0]} <input> <output>"
+    return 1
+  fi
+
+  fftvpass "$1" - &&
+    fftvpass "$1" "$2" ||
+    return 1
 }
