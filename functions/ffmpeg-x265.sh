@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-function fftv2pass() {
+function fftv() {
   if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <output>"
     return 1

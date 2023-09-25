@@ -230,7 +230,7 @@ function fftvpass() {
   echo
 }
 
-function fftv() {
+function fftv2pass() {
   if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <output>"
     return 1

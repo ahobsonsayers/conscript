@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-function fftv_watch() {
+function fftvwatch() {
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <directory>"
     return 1
