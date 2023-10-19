@@ -18,7 +18,7 @@ cd "$DIR"
 git fetch --tags
 tagHash=$(git rev-list --tags --max-count=1)
 tagName=$(git describe --tags "$tagHash")
-git checkout "$tagName" || true
+git checkout "$tagName"
 
 # If updated
 checkout_status=$?
@@ -26,3 +26,5 @@ if [[ checkout_status -eq 0 ]]; then
     echo "Updated to $tagName. Building"
     make BUILD_TYPE=metal build
 fi
+
+./local-ai --f16 --autoload-galleries --address :1111 "$@"
