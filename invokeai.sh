@@ -2,12 +2,13 @@
 set -euo pipefail # Strict
 
 # Variables
+NAME="InvokeAI"
 REPO="invoke-ai/InvokeAI"
 DIR="$HOME/invokeai"
 
 # Install if required
 if [[ ! -d "$DIR" ]]; then
-    echo "$DIR does not exist. Installing InvokeAI."
+    echo "$NAME is not installed. Installing."
 
     INSTALLER_DIR="/tmp/invokeai"
     INSTALLER_ZIP="$INSTALLER_DIR/installer.zip"

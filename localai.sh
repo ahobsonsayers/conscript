@@ -2,13 +2,14 @@
 set -euo pipefail # Strict
 
 # Variables
-REPO_URL="https://github.com/go-skynet/LocalAI.git"
+NAME="LocalAI"
+REPO="https://github.com/go-skynet/LocalAI"
 DIR="$HOME/localai"
 
 # Clone repo if required
 if [[ ! -d "$DIR" ]]; then
-    echo "$DIR does not exist. Cloning LocalAI."
-    git clone "$REPO_URL" "$DIR" --depth 1
+    echo "$NAME is not installed. Installing."
+    git clone "$REPO" "$DIR" --depth 1
 fi
 
 cd "$DIR"
