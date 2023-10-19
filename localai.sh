@@ -14,16 +14,16 @@ fi
 
 cd "$DIR"
 
-# Checkout latest tag
+# Get latest tag
 git fetch --tags
-tagHash=$(git rev-list --tags --max-count=1)
-tagName=$(git describe --tags "$tagHash")
-git checkout "$tagName"
+latestTagHash=$(git rev-list --tags --max-count=1)
+currentTag=$(git describe --tags)
+newTag=$(git describe --tags "$latestTagHash")
 
 # If updated
-checkout_status=$?
-if [[ checkout_status -eq 0 ]]; then
-    echo "Updated to $tagName. Building"
+if [[ "$currentTag" != "$newTag" ]]; then
+    git checkout "$newTag"
+    echo "Updated to $newTag. Building"
     make BUILD_TYPE=metal build
 fi
 
