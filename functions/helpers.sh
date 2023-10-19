@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function error() {
-  echo "$@" 1>&2
+  echo -e "\e[31m$*\e[0m" 1>&2
 }
 
 function abspath() {

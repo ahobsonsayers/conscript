@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail # Strict
 
+function error() {
+    echo -e "\e[31m$*\e[0m" 1>&2
+}
+
 # Variables
 NAME="LocalAI"
 REPO="https://github.com/go-skynet/LocalAI"
@@ -27,4 +31,13 @@ if [[ "$currentTag" != "$newTag" ]]; then
     make BUILD_TYPE=metal build
 fi
 
-./local-ai --f16 --autoload-galleries --address :1111 "$@"
+if [[ "$#" -eq 1 && "$1" = "models" ]]; then
+    curl -s http://localhost:1111/v1/models | jq . || error "LocalAI is not running"
+    exit
+fi
+
+./local-ai \
+    --address :1111 \
+    --models-path "$HOME/models/llm" \
+    --autoload-galleries \
+    "$@"
