@@ -40,15 +40,15 @@ fi
   --address :1111 \
   --models-path "$HOME/models/llm" \
   --galleries '
-  [
-    {
-    "name": "official",
-    "url": "github:go-skynet/model-gallery/index.yaml"
-    },
-    {
-    "name": "community",
-    "url": "github:go-skynet/model-gallery/huggingface.yaml"
-    }
-  ]
+    [
+      {
+        "name": "official",
+        "url": "github:go-skynet/model-gallery/index.yaml"
+      },
+      {
+        "name": "community",
+        "url": "github:go-skynet/model-gallery/huggingface.yaml"
+      }
+    ]
   ' \
   "$@"
