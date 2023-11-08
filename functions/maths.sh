@@ -65,13 +65,13 @@ max() {
     while IFS=$'\t , ' read -r -a numbers; do
       for num in "${numbers[@]}"; do
         if ! is_blank "$num" && {
-      [[ -z $max_value ]] ||
-        [[ "$(calc "$num > $max_value")" -eq 1 ]]
-    }; then
-      max_value="$num"
-    fi
+          [[ -z $max_value ]] ||
+            [[ "$(calc "$num > $max_value")" -eq 1 ]]
+        }; then
+          max_value="$num"
+        fi
       done
-    done <<< "$line"
+    done <<<"$line"
   done
 
   echo "$max_value"

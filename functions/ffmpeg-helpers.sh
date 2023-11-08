@@ -167,10 +167,7 @@ function ffdurationseconds() {
 
 # Get bitrate
 function ffbitrate() {
-  if ! {
-    [[ $# == 1 ]] ||
-      [[ $# == 2 && $1 =~ ^("general"|"video"|"audio")$ ]]
-  }; then
+  if [[ $# != 2 || ! $1 =~ ^("general"|"video"|"audio")$ ]]; then
     echo "Usage: ${FUNCNAME[0]} [type] <input>"
     echo "[type] must be one of: general, video, audio"
     return 1
@@ -178,11 +175,6 @@ function ffbitrate() {
 
   local type="$1"
   local file="$2"
-
-  if [[ $# -eq 1 ]]; then
-    type="general"
-    file="$1"
-  fi
 
   local bitrate
   bitrate="$(
@@ -319,4 +311,45 @@ function ffaudiolang() {
     -select_streams a:0 \
     -show_entries "stream_tags=language" \
     "$1"
+}
+
+video_crop_lossless() {
+  if [[ $# -ne 2 ]]; then
+    echo "Usage: ${FUNCNAME[0]} <input> <output>"
+    return 1
+  fi
+
+  local source_height
+  source_height="$(ffheight "$1")" || return 1
+  echo "Video Height: $source_height"
+
+  local target_height
+  target_height=$(ffcropheight "$1") || return 1
+
+  local crop_multiple
+  crop_multiple=6
+
+  # Get source crop height as a multiple of a
+  # number depending on initial resolution
+  local target_height_multiple
+  target_height_multiple=$(((target_height + crop_multiple - 1) / crop_multiple * crop_multiple)) || return 1
+
+  if [[ $target_height_multiple -lt $source_height ]]; then
+    echo "Crop Height: $target_height_multiple"
+  else
+    echo "No crop required. Skipping"
+    exit 0
+  fi
+
+  ffmpeg \
+    -hide_banner -v warning \
+    -nostdin -stats \
+    -i "$1" \
+    -c:v libx264 \
+    -preset ultrafast \
+    -qp 0 \
+    -vf "crop=iw:$target_height_multiple" \
+    -c:a copy \
+    -c:s copy \
+    -y "$2"
 }
