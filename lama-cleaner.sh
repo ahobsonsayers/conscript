@@ -9,8 +9,17 @@ PACKAGE="lama-cleaner"
 if ! pipx list | grep -qF "$PACKAGE"; then
   echo "$NAME is not installed. Installing."
   pipx install "$PACKAGE"
+
+  # Inject additional packages
+  pipx inject "$PACKAGE" accelerate rembg
 fi
 
-pipx upgrade "$PACKAGE"
+pipx upgrade "$PACKAGE" --include-injected
 
-lama-cleaner
+lama-cleaner \
+  --port 1111 \
+  --device=mps \
+  --model-dir ~/models \
+  --enable-interactive-seg \
+  --enable-remove-bg \
+  "$@"

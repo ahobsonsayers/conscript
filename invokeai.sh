@@ -31,4 +31,4 @@ fi
 cd "$DIR"
 
 # Run
-./invoke.sh
+./invoke.sh "$@"
