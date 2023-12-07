@@ -19,12 +19,6 @@ print_help_exit() {
     exit 1
 }
 
-cleanup() {
-    # Delete mount folders if empty
-    rmdir "$REMOTE_PATH" 2>/dev/null || true
-    rmdir "$MOUNT_PATH" 2>/dev/null || true
-}
-
 # Check if there is at least one argument
 if [ $# -eq 0 ]; then
     print_help_exit
@@ -33,9 +27,6 @@ fi
 SERVER_NAME="$1"
 MOUNT_PATH="$HOME/mount"
 REMOTE_PATH="$MOUNT_PATH/$SERVER_NAME"
-
-# Run cleanup on exit
-trap cleanup EXIT
 
 #  Check remote is valid
 rclone about ArranServer: 1>/dev/null || exit 1
