@@ -49,4 +49,4 @@ fi
 
 # # Mount
 shift # Remove first arg
-rclone mount "$SERVER_NAME": "$REMOTE_PATH" --vfs-cache-mode writes --allow-other --daemon
+rclone mount "$SERVER_NAME" "$REMOTE_PATH" --vfs-cache-mode writes --allow-other --daemon
