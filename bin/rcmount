@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail # Strict
+
+# NOTE:
+#   user_allow_other will need to be enabled in /etc/fuse.conf to use --allow-other
+# Run:
+#   sudo sed -i 's|#user_allow_other|user_allow_other|g' /etc/fuse.conf
+
+info() {
+    echo -e "\e[32m$*\e[0m" 1>&2
+}
+
+error() {
+    echo -e "\e[31m$*\e[0m" 1>&2
+}
+
+print_help_exit() {
+    error "Usage: $0 {remote}"
+    exit 1
+}
+
+cleanup() {
+    # Delete mount folders if empty
+    rmdir "$REMOTE_PATH" 2>/dev/null || true
+    rmdir "$MOUNT_PATH" 2>/dev/null || true
+}
+
+# Check if there is at least one argument
+if [ $# -eq 0 ]; then
+    print_help_exit
+fi
+
+SERVER_NAME="$1"
+MOUNT_PATH="$HOME/mount"
+REMOTE_PATH="$MOUNT_PATH/$SERVER_NAME"
+
+# Run cleanup on exit
+trap cleanup EXIT
+
+#  Check remote is valid
+rclone about ArranServer: 1>/dev/null || exit 1
+
+# If mount folder does not exist, create it as root
+if [[ ! -d "$MOUNT_PATH" ]]; then
+    mkdir -p "$MOUNT_PATH"
+fi
+
+# If remote folder does not exist, create it
+if [[ ! -d "$REMOTE_PATH" ]]; then
+    mkdir -p "$REMOTE_PATH"
+fi
+if # Check remote folder is empty
+    [ "$(ls -A "$REMOTE_PATH")" ]
+then
+    error "Remote folder is not empty."
+    exit 1
+fi
+
+# # Mount
+shift # Remove first arg
+rclone mount "$SERVER_NAME": "$REMOTE_PATH" --vfs-cache-mode writes --allow-other --daemon

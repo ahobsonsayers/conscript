@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail # Strict
+
+error() {
+    echo -e "\e[31m$*\e[0m" 1>&2
+}
+
+print_help_exit() {
+    error "Usage: $0 {remote}"
+    exit 1
+}
+
+# Check if there is at least one argument
+if [ $# -eq 0 ]; then
+    print_help_exit
+fi
+
+SERVER_NAME="$1"
+MOUNT_PATH="$HOME/mount"
+REMOTE_PATH="$MOUNT_PATH/$SERVER_NAME"
+
+#  Check remote is valid
+rclone about ArranServer: 1>/dev/null || exit 1
+
+# Unmount
+if [[ $(uname) == "Darwin" ]]; then
+    umount "$REMOTE_PATH"
+else
+    fusermount -u "$REMOTE_PATH"
+fi
+
+# Delete mount folders if empty
+rmdir "$REMOTE_PATH" 2>/dev/null || true
+rmdir "$MOUNT_PATH" 2>/dev/null || true
