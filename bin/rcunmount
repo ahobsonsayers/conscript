@@ -15,7 +15,7 @@ if [ $# -eq 0 ]; then
     print_help_exit
 fi
 
-SERVER_NAME="$1"
+SERVER_NAME="${1%:}"
 MOUNT_PATH="$HOME/mount"
 REMOTE_PATH="$MOUNT_PATH/$SERVER_NAME"
 
