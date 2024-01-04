@@ -26,7 +26,7 @@ newTag=$(git describe --tags "$latestTagHash")
 
 # If updated
 if [[ $currentTag != "$newTag" ]]; then
-  git checkout -d "$newTag"
+  git checkout -b "$newTag"
   echo "Updated to $newTag. Building"
   make BUILD_TYPE=metal build
 fi
