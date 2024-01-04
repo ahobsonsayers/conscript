@@ -17,7 +17,7 @@ if [[ ! -d $DIR ]]; then
 
   # Download latest installer zip
   latest_release=$(curl -s "https://api.github.com/repos/$REPO/releases/latest")
-  latest_installer=$(echo "$latest_release" | grep -o 'https://github.com[^"]*installer[^"]*.zip')
+  latest_installer=$(echo "$latest_release" | grep -m 1 -o 'https://github.com[^"]*installer[^"]*.zip')
   wget -O "$INSTALLER_ZIP" "$latest_installer"
 
   # Unzip and install
