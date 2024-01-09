@@ -3,7 +3,7 @@ set -euo pipefail # Strict
 
 if [[ $# -ne 2 ]]; then
   echo "Usage: $(basename "$0") <input> <output>"
-  return 1
+  exit 1
 fi
 
 echo
@@ -59,7 +59,7 @@ elif [[ $source_width -eq 1280 ]]; then
   echo "No source scaling required. Skipping"
 else
   error "Unsupported resolution"
-  return 1
+  exit 1
 fi
 
 # Get source crop height as a multiple of a particular number
@@ -95,7 +95,7 @@ fi
 
 if [[ $target_extension != "mkv" ]]; then
   error "Target must be an mkv"
-  return 1
+  exit 1
 fi
 
 echo
