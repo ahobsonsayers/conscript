@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail # Strict
 
+# shellcheck source=utils/utils.sh
+source "$BASH_UTILS/utils.sh"
+
 if [[ $# -ne 2 ]]; then
   echo "Usage: $(basename "$0") <input> <output>"
   exit 1
@@ -54,9 +57,9 @@ if [[ $source_width -eq 1920 ]]; then
   crop_multiple=6
   # scale_params="zscale=w=1280:h=-1:filter=spline36,"
 elif [[ $source_width -eq 1280 ]]; then
+  echo "No source scaling required. Skipping"
   scale_params=""
   crop_multiple=2 # Could use 4 * source_width / 1280 ?
-  echo "No source scaling required. Skipping"
 else
   error "Unsupported resolution"
   exit 1
@@ -74,13 +77,16 @@ if [[ $source_crop_height_multiple -lt $source_height ]]; then
   # crop_param="crop_h=$source_crop_height_multiple:"
 else
   echo "No source cropping required. Skipping"
+  crop_param=""
 fi
 
 # Get colour param
 if [[ -z $source_colour ]] || [[ $source_colour == "unknown" ]]; then
   echo "Unknown source colour. Skipping colour mapping"
+  colour_params=""
 elif [[ $source_colour == "bt709" ]]; then
   echo "No source colour mapping required. Skipping"
+  colour_params=""
 else
   echo "Mapping source colours to BT.709"
   colour_params="
@@ -101,7 +107,7 @@ fi
 echo
 echo "Transcoding"
 echo
-nice ffmpeg \
+ffmpeg \
   -hide_banner -v warning \
   -nostdin -stats \
   -init_hw_device vulkan \

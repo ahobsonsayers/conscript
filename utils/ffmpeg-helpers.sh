@@ -91,7 +91,7 @@ function ffcropheight() {
   local duration
   local step
 
-  duration=$(ffdurationseconds "$1")
+  duration=$(ffdurationseconds video "$1")
   floored_duration=$(floor "$duration")
   step=$((floored_duration / 11))
 
