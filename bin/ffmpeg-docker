@@ -1,0 +1,8 @@
+#!/bin/bash
+
+docker run --rm -it \
+  -v "$HOME":"$HOME" \
+  -w "$(pwd)" \
+  -e PUID=$(id -u) \
+  -e PGID=$(id -g) \
+  linuxserver/ffmpeg "$@"

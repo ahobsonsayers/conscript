@@ -107,7 +107,7 @@ fi
 echo
 echo "Transcoding"
 echo
-ffmpeg \
+nice ffmpeg-docker \
   -hide_banner -v warning \
   -nostdin -stats \
   -init_hw_device vulkan \
@@ -129,15 +129,16 @@ ffmpeg \
 			format=yuv420p10
 		" \
   -x265-params "
-			bframes=10:
+			bframes=8:
 			ref=6:
-			subme=7:
+			subme=5:
 			max-merge=5:
 			rd=4:
 			limit-refs=3:
 			aq-mode=3:
 			psy-rd=1:
-			psy-rdoq=1
+			psy-rdoq=1:
+			limit-sao=1
 		" \
   -map 0:a:0 \
   -c:a libfdk_aac \
