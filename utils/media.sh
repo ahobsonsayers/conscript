@@ -21,13 +21,13 @@ function video_quality() {
   echo "Measuring video quality"
   ffmpeg-quality-metrics "$2" "$1" \
     -s lanczos \
-    -m vmaf ssim psnr |
+    -m vmaf \
+    --vmaf-features float_ms_ssim psnr_hvs |
     jq '.global | {
-        vmaf: .vmaf.vmaf, 
-        ssim: .ssim.ssim_avg, 
-        psnr: .psnr.psnr_avg, 
-        mse: .psnr.mse_avg 
-      }' \
+       vmaf: .vmaf.vmaf,
+       ssim: .vmaf.float_ms_ssim,
+       psnr: .vmaf.psnr_hvs
+     }' \
       >"$output_json"
 
   echo "Written results to $output_json"
