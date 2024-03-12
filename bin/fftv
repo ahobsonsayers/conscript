@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env
 set -euo pipefail # Strict
 
 # shellcheck source=utils/utils.sh
@@ -53,12 +53,12 @@ echo
 # Get scale params
 if [[ $source_width -eq 1920 ]]; then
   echo "Scaling source to 720p"
-  scale_params="w=1280:h=-1:downscaler=ewa_lanczos:"
+  scale_params="libplacebo=w=1280:h=-1:downscaler=ewa_lanczos"
+  # scale_params="zscale=w=1280:h=-1:filter=spline36"
   crop_multiple=6
-  # scale_params="zscale=w=1280:h=-1:filter=spline36,"
 elif [[ $source_width -eq 1280 ]]; then
   echo "No source scaling required. Skipping"
-  scale_params=""
+  scale_params="null"
   crop_multiple=2 # Could use 4 * source_width / 1280 ?
 else
   error "Unsupported resolution"
@@ -72,12 +72,10 @@ source_crop_height_multiple=$(((source_crop_height + crop_multiple - 1) / crop_m
 # Get crop paramscrop_param
 if [[ $source_crop_height_multiple -lt $source_height ]]; then
   echo "Cropping source to a height of $source_crop_height_multiple"
-  crop_param="crop=iw:$source_crop_height_multiple,"
-  # libplacebo cropping. Doesnt seem to work atm
-  # crop_param="crop_h=$source_crop_height_multiple:"
+  crop_param="crop=iw:$source_crop_height_multiple"
 else
   echo "No source cropping required. Skipping"
-  crop_param=""
+  crop_param="null"
 fi
 
 # Get colour param
@@ -118,15 +116,8 @@ nice ffmpeg-docker \
   -crf:v 23 \
   -preset:v slower \
   -vf "
-			$crop_param
-			hwupload,
-			libplacebo=
-				$colour_params
-				$scale_params
-				deband=true:
-				format=yuv420p10,
-			hwdownload,
-			format=yuv420p10
+			$crop_param,
+			$scale_params
 		" \
   -x265-params "
 			bframes=8:
@@ -136,9 +127,11 @@ nice ffmpeg-docker \
 			rd=4:
 			limit-refs=3:
 			aq-mode=3:
-			psy-rd=1:
+			psy-rd=2:
 			psy-rdoq=1:
-			limit-sao=1
+			limit-sao=1:
+			nr-intra=100:
+			nr-inter=400
 		" \
   -map 0:a:0 \
   -c:a libfdk_aac \
