@@ -1,8 +1,10 @@
-#!/usr/bin/env
+#!/usr/bin/env bash
 set -euo pipefail # Strict
 
 # shellcheck source=utils/utils.sh
 source "$BASH_UTILS/utils.sh"
+
+check_installed docker ffmpeg ffprobe mediainfo mkvmerge mkvpropedit
 
 if [[ $# -ne 2 ]]; then
   echo "Usage: $(basename "$0") <input> <output>"

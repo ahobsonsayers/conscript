@@ -56,3 +56,17 @@ function file_extension() {
   file_name="$(file_name "$1")"
   echo "${file_name##*.}"
 }
+
+function check_installed() {
+  local missing=()
+  for cmd in "$@"; do
+    if ! command -v "$cmd" &>/dev/null; then
+      missing+=("$cmd")
+    fi
+  done
+
+  if [ ${#missing[@]} -ne 0 ]; then
+    echo "The following are not installed: ${missing[*]}"
+    return 1
+  fi
+}
