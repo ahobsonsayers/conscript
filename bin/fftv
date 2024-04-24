@@ -1,4 +1,4 @@
-#!/usr/bin/env
+#!/usr/bin/env bash
 set -euo pipefail # Strict
 
 # shellcheck source=utils/utils.sh
@@ -53,12 +53,11 @@ echo
 # Get scale params
 if [[ $source_width -eq 1920 ]]; then
   echo "Scaling source to 720p"
-  scale_params="libplacebo=w=1280:h=-1:downscaler=ewa_lanczos"
-  # scale_params="zscale=w=1280:h=-1:filter=spline36"
+  scale_params="w=1280:h=-1:downscaler=ewa_lanczos:"
   crop_multiple=6
 elif [[ $source_width -eq 1280 ]]; then
   echo "No source scaling required. Skipping"
-  scale_params="null"
+  scale_params=""
   crop_multiple=2 # Could use 4 * source_width / 1280 ?
 else
   error "Unsupported resolution"
@@ -69,16 +68,16 @@ fi
 # depending on initial resolution
 source_crop_height_multiple=$(((source_crop_height + crop_multiple - 1) / crop_multiple * crop_multiple))
 
-# Get crop paramscrop_param
+# Get crop params
 if [[ $source_crop_height_multiple -lt $source_height ]]; then
   echo "Cropping source to a height of $source_crop_height_multiple"
-  crop_param="crop=iw:$source_crop_height_multiple"
+  crop_params="crop_h=$source_crop_height_multiple:"
 else
   echo "No source cropping required. Skipping"
-  crop_param="null"
+  crop_params=""
 fi
 
-# Get colour param
+# Get colour params
 if [[ -z $source_colour ]] || [[ $source_colour == "unknown" ]]; then
   echo "Unknown source colour. Skipping colour mapping"
   colour_params=""
@@ -88,13 +87,13 @@ elif [[ $source_colour == "bt709" ]]; then
 else
   echo "Mapping source colours to BT.709"
   colour_params="
-			tonemapping=bt.2390:
-			tonemapping_param=0.5:
-			colorspace=bt709:
-			color_primaries=bt709:
-			color_trc=bt709:
-			range=limited:
-		"
+    tonemapping=bt.2390:
+    tonemapping_param=0.5:
+    colorspace=bt709:
+    color_primaries=bt709:
+    color_trc=bt709:
+    range=limited:
+  "
 fi
 
 if [[ $target_extension != "mkv" ]]; then
@@ -116,23 +115,26 @@ nice ffmpeg-docker \
   -crf:v 23 \
   -preset:v slower \
   -vf "
-			$crop_param,
-			$scale_params
-		" \
+    libplacebo=
+      $colour_params
+      $crop_params
+      $scale_params
+      deband=true
+  " \
   -x265-params "
-			bframes=8:
-			ref=6:
-			subme=5:
-			max-merge=5:
-			rd=4:
-			limit-refs=3:
-			aq-mode=3:
-			psy-rd=2:
-			psy-rdoq=1:
-			limit-sao=1:
-			nr-intra=100:
-			nr-inter=400
-		" \
+    bframes=8:
+    ref=6:
+    subme=5:
+    max-merge=5:
+    rd=4:
+    limit-refs=3:
+    aq-mode=3:
+    psy-rd=2:
+    psy-rdoq=1:
+    limit-sao=1:
+    nr-intra=50:
+    nr-inter=200
+  " \
   -map 0:a:0 \
   -c:a libfdk_aac \
   -profile:a aac_he_v2 \
