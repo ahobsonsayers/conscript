@@ -2,6 +2,8 @@
 
 # Screenshot
 function ffscreenshot() {
+  check_installed ffmpeg
+
   if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <timestamp>"
     echo "<timestamp> format: H[H]:M[M]:S[S]"
@@ -26,6 +28,8 @@ function ffscreenshot() {
 
 # Cut
 function ffcut() {
+  check_installed ffmpeg
+
   if [[ $# -ne 3 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <timestamp> <duration>"
     echo "<timestamp> and <duration> format: H[H]:M[M]:S[S]"
@@ -53,6 +57,8 @@ function ffcut() {
 
 # Get video width
 function ffwidth() {
+  check_installed ffmpeg
+
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
@@ -68,6 +74,8 @@ function ffwidth() {
 
 # Get video height
 function ffheight() {
+  check_installed ffmpeg
+
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
@@ -83,6 +91,8 @@ function ffheight() {
 
 # Get Crop Height
 function ffcropheight() {
+  check_installed ffmpeg
+
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
@@ -91,7 +101,7 @@ function ffcropheight() {
   local duration
   local step
 
-  duration=$(ffdurationseconds video "$1")
+  duration=$(media_duration_seconds video "$1")
   floored_duration=$(floor "$duration")
   step=$((floored_duration / 11))
 
@@ -110,59 +120,6 @@ function ffcropheight() {
   done |
     sort -bh | uniq -c | sort -bh |
     tail -1 | awk '{print $2}'
-}
-
-# Get duration
-function ffduration() {
-  if ! {
-    [[ $# == 1 ]] ||
-      [[ $# == 2 && $1 =~ ^("general"|"video"|"audio")$ ]]
-  }; then
-    echo "Usage: ${FUNCNAME[0]} [type] <input>"
-    echo "<type> must be one of: general, video, audio"
-    return 1
-  fi
-
-  local type="$1"
-  local file="$2"
-
-  if [[ $# -eq 1 ]]; then
-    type="general"
-    file="$1"
-  fi
-
-  mediainfo \
-    --Output="${type^};%Duration/String3%" \
-    "$file"
-}
-
-# Get duration (in seconds)
-function ffdurationseconds() {
-  if ! {
-    [[ $# == 1 ]] ||
-      [[ $# == 2 && $1 =~ ^("general"|"video"|"audio")$ ]]
-  }; then
-    echo "Usage: ${FUNCNAME[0]} [type] <input>"
-    echo "[type] must be one of: general, video, audio"
-    return 1
-  fi
-
-  local type="$1"
-  local file="$2"
-
-  if [[ $# -eq 1 ]]; then
-    type="general"
-    file="$1"
-  fi
-
-  local duration_ms
-  duration_ms="$(
-    mediainfo \
-      --Output="${type^};%Duration%" \
-      "$file"
-  )"
-
-  bc <<<"scale=3; $duration_ms / 1000"
 }
 
 # Get bitrate
@@ -188,6 +145,8 @@ function ffbitrate() {
 
 # Get video colour information
 function ffcolourinfo() {
+  check_installed ffprobe
+
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
@@ -246,6 +205,8 @@ function ffcolour() {
 
 # Count BFrames
 function ffbframes() {
+  check_installed ffprobe
+
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
@@ -259,6 +220,8 @@ function ffbframes() {
 }
 
 function ffstart() {
+  check_installed ffprobe
+
   if ! {
     [[ $# == 1 ]] ||
       [[ $# == 2 && $1 =~ ^("video"|"audio")$ ]]
@@ -286,6 +249,8 @@ function ffstart() {
 
 # get video encode settings
 function ffsettings() {
+  check_installed mediainfo
+
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
@@ -300,6 +265,8 @@ function ffsettings() {
 
 # get video audio language
 function ffaudiolang() {
+  check_installed ffprobe
+
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
     return 1
@@ -314,6 +281,8 @@ function ffaudiolang() {
 }
 
 video_crop_lossless() {
+  check_installed ffmpeg
+
   if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <output>"
     return 1

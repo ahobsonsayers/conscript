@@ -167,7 +167,7 @@ function fffilmpass() {
     echo
 
     local video_duration
-    video_duration="$(ffduration video "$target_file")"
+    video_duration="$(media_duration video "$target_file")"
     echo "Transcoded Video Duration: $video_duration"
 
     local audio_start
