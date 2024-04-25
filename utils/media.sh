@@ -76,6 +76,7 @@ function video_quality() {
   local output_json="${output_dir}/${output_label}.json"
 
   echo "Measuring video quality"
+
   ffmpeg-quality-metrics "$2" "$1" \
     -s lanczos \
     -m vmaf \
@@ -84,8 +85,16 @@ function video_quality() {
        vmaf: .vmaf.vmaf,
        ssim: .vmaf.float_ms_ssim,
        psnr: .vmaf.psnr_hvs
-     }' \
-      >"$output_json"
+    }' >"$output_json"
+
+  # ffmpeg-quality-metrics "$2" "$1" \
+  #   -s lanczos \
+  #   -m vmaf ssim psnr |
+  #   jq '.global | {
+  #      vmaf: .vmaf.vmaf,
+  #      ssim: .ssim.ssim_avg,
+  #      psnr: .psnr.psnr_avg
+  #   }' > "$output_json"
 
   echo "Written results to $output_json"
 }
