@@ -5,4 +5,4 @@ docker run --rm -it \
   -w "$(pwd)" \
   -e PUID=$(id -u) \
   -e PGID=$(id -g) \
-  linuxserver/ffmpeg:latest "$@"
+  linuxserver/ffmpeg:amd64-latest "$@"
