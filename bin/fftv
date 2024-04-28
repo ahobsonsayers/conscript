@@ -113,7 +113,6 @@ echo
 nice ffmpeg-docker \
   -hide_banner -v warning \
   -nostdin -stats \
-  -init_hw_device vulkan \
   -i "$source_file" \
   -map 0:v:0 \
   -c:v libx265 \
