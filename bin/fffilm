@@ -56,12 +56,12 @@ echo
 # https://ffmpeg.org/ffmpeg-filters.html#libplacebo
 
 # Get scale params
-if [[ $source_width -eq 1920 ]]; then
-  echo "Scaling source to 720p"
-  # scale_params="zscale=w=1280:h=-1:filter=spline36"
-  scale_params="w=1280:h=-1:downscaler=ewa_lanczos:frame_mixer=oversample:"
+if [[ $source_width -eq 3840 || $source_width -eq 2560 ]]; then
+  echo "Scaling to 1080p"
+  # scale_params="zscale=w=1920:h=-1:filter=spline36"
+  scale_params="w=1920:h=-1:downscaler=ewa_lanczos:frame_mixer=oversample:"
   crop_multiple=6
-elif [[ $source_width -eq 1280 ]]; then
+elif [[ $source_width -eq 1920 || $source_width -eq 1280 ]]; then
   echo "No source scaling required. Skipping"
   scale_params=""
   crop_multiple=2 # Could use 4 * source_width / 1280 ?
@@ -101,23 +101,52 @@ else
   "
 fi
 
-if [[ $target_extension != "mkv" ]]; then
-  error "Target must be an mkv"
-  exit 1
+# Get pass params and ffmpeg output args depending on pass
+if [[ $target_file == "-" ]]; then
+  pass_num=1
+  output_args="
+    -an
+    -sn
+    -f null
+    -
+  "
+else
+  pass_num=2
+  output_args="
+    -map 0:a:0 \
+    -c:a libfdk_aac \
+    -profile:a aac_he_v2 \
+    -vbr 5 \
+    -ac 2 \
+    -map 0:s:m:language:eng? \
+    -c:s copy \
+    -map_metadata:g -1 \
+    -map_metadata:s -1 \
+    -metadata source="$source_label" \
+    -metadata:s:a language="$source_audio_language" \
+    -metadata:s:s language=eng \
+    -y "$target_file"
+  "
 fi
 
+# Split output args into an array
+output_args_array=""
+array_parse output_args_array "$output_args"
+
 echo
-echo "Transcoding"
+echo "Transcoding pass $pass_num"
 echo
 nice ffmpeg \
   -hide_banner -v warning \
   -nostdin -stats \
   -i "$source_file" \
   -map 0:v:0 \
-  -c:v libx265 \
-  -profile:v main10 \
-  -crf:v 23 \
+  -c:v libx264 \
+  -profile:v high \
+  -b:v 2.5M \
   -preset:v slower \
+  -tune film \
+  -pass "$pass_num" \
   -vf "
     $crop_params,
     libplacebo=
@@ -125,33 +154,13 @@ nice ffmpeg \
       $scale_params
       deband=true
   " \
-  -x265-params "
+  -x264-params "
     bframes=8:
     ref=6:
-    subme=5:
-    max-merge=5:
-    rd=4:
-    limit-refs=3:
     aq-mode=3:
-    psy-rd=2:
-    psy-rdoq=1:
-    limit-sao=1:
-    nr-intra=50:
-    nr-inter=200
+    merange=24
   " \
-  -map 0:a:0 \
-  -c:a libfdk_aac \
-  -profile:a aac_he_v2 \
-  -vbr 5 \
-  -ac 2 \
-  -map 0:s:m:language:eng? \
-  -c:s copy \
-  -map_metadata:g -1 \
-  -map_metadata:s -1 \
-  -metadata source="$source_label" \
-  -metadata:s:a language="$source_audio_language" \
-  -metadata:s:s language=eng \
-  -y "$target_file"
+  "${output_args_array[@]}"
 
 echo
 
