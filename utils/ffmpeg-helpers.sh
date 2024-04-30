@@ -106,12 +106,12 @@ function ffcropheight() {
   step=$((floored_duration / 11))
 
   for i in $(seq 1 10); do
-    ffmpeg \
+    /opt/homebrew/opt/ffmpeg@6/bin/ffmpeg \
       -hide_banner \
       -nostdin -stats \
       -ss "$((i * step))" \
       -i "$1" \
-      -frames:v 1 \
+      -t 1 \
       -vf "cropdetect=round=2" \
       -f null \
       - 2>&1 |
