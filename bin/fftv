@@ -133,11 +133,8 @@ nice ffmpeg \
     rd=4:
     limit-refs=3:
     aq-mode=3:
-    psy-rd=2:
-    psy-rdoq=1:
     limit-sao=1:
-    nr-intra=50:
-    nr-inter=200
+    nr-inter=250
   " \
   -map 0:a:0 \
   -c:a libfdk_aac \
