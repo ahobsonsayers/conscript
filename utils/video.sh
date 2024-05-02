@@ -29,23 +29,24 @@ function video_quality {
   echo "Measuring video quality"
 
   ffmpeg-quality-metrics "$2" "$1" \
+    --progress \
     -s lanczos \
-    -m vmaf \
-    --vmaf-features float_ms_ssim psnr_hvs |
+    -m vmaf ssim |
     jq '.global | {
        vmaf: .vmaf.vmaf,
-       ssim: .vmaf.float_ms_ssim,
-       psnr: .vmaf.psnr_hvs
+       ssim: .ssim.ssim_avg
     }' >"$output_json"
 
   # ffmpeg-quality-metrics "$2" "$1" \
+  #   --progress \
   #   -s lanczos \
-  #   -m vmaf ssim psnr |
+  #   -m vmaf \
+  #   --vmaf-features float_ms_ssim psnr_hvs |
   #   jq '.global | {
   #      vmaf: .vmaf.vmaf,
-  #      ssim: .ssim.ssim_avg,
-  #      psnr: .psnr.psnr_avg
-  #   }' > "$output_json"
+  #      ssim: .vmaf.float_ms_ssim,
+  #      psnr: .vmaf.psnr_hvs
+  #   }' >"$output_json"
 
   echo "Written results to $output_json"
 }
