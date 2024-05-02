@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -euo pipefail # Strict
+
+# shellcheck source=utils/utils.sh
+source "$BASH_UTILS/utils.sh"
+
+check_installed docker ffmpeg ffprobe fswatch mediainfo mkvmerge mkvpropedit sd
+
+if [[ $# -ne 1 ]]; then
+  echo "Usage: $0 <directory>"
+  exit 1
+fi
+
+current_dir=$(pwd)
+root_dir=$(abspath "$1")
+input_dir="$root_dir/input"
+complete_dir="$input_dir/complete"
+error_dir="$input_dir/error"
+output_dir="$root_dir/output"
+
+# Create required folders if they do not exist
+mkdir -p "$input_dir" "$complete_dir" "$error_dir" "$output_dir"
+
+# Change to root directory
+cd "$root_dir"
+
+# Use fswatch to watch directory for created/moved/renamed mkv/mp4 files
+# Event flags found here:
+#   http://emcrisostomo.github.io/fswatch/doc/1.11.3/fswatch.html/Invoking-fswatch.html#Event-Flags
+fswatch "$input_dir" \
+  --print0 \
+  --event=Created --event=MovedTo --event=Renamed \
+  --exclude=".*" --include="\.mkv$" --include="\.mp4$" |
+  while read -r -d "" input_path; do
+
+    input_name="$(file_name "$input_path")"
+
+    if [ ! -f "$input_path" ]; then
+      echo "$input_name does not exist. Skipping"
+      break
+    fi
+
+    if lsof -Fp "$input_path" &>/dev/null; then
+      echo "$input_name is still open. Skipping"
+      break
+    fi
+
+    output_name="$(
+      echo "$input_name" |
+        sd -f i '(amzn|dnsp|hmax|atmos)' '' |
+        sd -f i '[ .()-]+' '.' |
+        sd -f i '1080p' '720p' |
+        sd -f i 'web(.)?dl' 'WEB-DL' |
+        sd -f i 'DD(P|\+)?(\.)?(5.1|2.0)' '2CH' |
+        sd -f i '[hx](\.)?264' 'x265' |
+        sd -f i -- '\.[a-z0-9]+\.([a-z0-9]+)$' '-arranhs.$1'
+    )"
+    output_path="$output_dir/$output_name"
+
+    # Transcode file and move it when completed/errored
+    echo "Transcoding $input_name to $output_name"
+    echo
+
+    fftv "$input_path" "$output_path" &&
+      mv "$input_path" "$complete_dir" ||
+      mv "$input_path" "$error_dir"
+
+  done
+
+# Change back to current directory
+cd "$current_dir"
