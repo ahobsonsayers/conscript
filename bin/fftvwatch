@@ -2,7 +2,7 @@
 set -euo pipefail # Strict
 
 # shellcheck source=utils/utils.sh
-source "$BASH_UTILS/utils.sh"
+source "$SHELL_UTILS/utils.sh"
 
 check_installed docker ffmpeg ffprobe fswatch mediainfo mkvmerge mkvpropedit sd
 
@@ -30,7 +30,7 @@ cd "$root_dir"
 fswatch "$input_dir" \
   --print0 \
   --event=Created --event=MovedTo --event=Renamed \
-  --exclude=".*" --include="\.mkv$" --include="\.mp4$" |
+  --exclude=".*" --include="^$input_dir/[^/]*\.mkv$" --include="^$input_dir/[^/]*\.mp4$" |
   while read -r -d "" input_path; do
 
     input_name="$(file_name "$input_path")"
