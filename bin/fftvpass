@@ -20,7 +20,6 @@ echo "Source File: $source_file"
 target_file="$2"
 echo "Target File: $target_file"
 
-source_dir="$(dirname "$source_file")"
 source_label="$(file_label "$source_file")"
 
 target_dir="$(dirname "$target_file")"
@@ -103,7 +102,7 @@ else
 fi
 
 # Get pass params and ffmpeg output args depending on pass
-analysis_file="$source_dir/analysis-$source_label.dat"
+analysis_file="x265_2pass.dat"
 if [[ $target_file == "-" ]]; then
   pass_num=1
   pass_params="
