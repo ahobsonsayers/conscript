@@ -20,6 +20,7 @@ echo "Source File: $source_file"
 target_file="$2"
 echo "Target File: $target_file"
 
+source_dir="$(dirname "$source_file")"
 source_label="$(file_label "$source_file")"
 
 target_dir="$(dirname "$target_file")"
@@ -101,13 +102,54 @@ else
   "
 fi
 
-if [[ $target_extension != "mkv" ]]; then
+# Get pass params and ffmpeg output args depending on pass
+analysis_file="$source_dir/analysis-$source_label.dat"
+if [[ $target_file == "-" ]]; then
+  pass_num=1
+  pass_params="
+    pass=1:
+    analysis-save=$analysis_file:
+    analysis-save-reuse-level=10
+  "
+  output_args="
+    -an
+    -sn
+    -f null
+    -
+  "
+elif [[ $target_extension == "mkv" ]]; then
+  pass_num=2
+  pass_params="
+    pass=2:
+    analysis-load=$analysis_file:
+    analysis-load-reuse-level=10
+  "
+  output_args="
+    -map 0:a:0 \
+    -c:a libfdk_aac \
+    -profile:a aac_he_v2 \
+    -vbr 5 \
+    -ac 2 \
+    -map 0:s:m:language:eng? \
+    -c:s copy \
+    -map_metadata:g -1 \
+    -map_metadata:s -1 \
+    -metadata source=\"$source_label\" \
+    -metadata:s:a language=\"$source_audio_language\" \
+    -metadata:s:s language=eng \
+    -y \"$target_file\"
+  "
+else
   error "Target must be an mkv"
   exit 1
 fi
 
+# Split output args into an array
+output_args_array=""
+array_parse output_args_array "$output_args"
+
 echo
-echo "Transcoding"
+echo "Transcoding pass $pass_num"
 echo
 nice ffmpeg \
   -hide_banner -v warning \
@@ -135,21 +177,10 @@ nice ffmpeg \
     max-merge=5:
     sao=1:
     selective-sao=2:
-    limit-sao=1
+    limit-sao=1:
+    $pass_params
   " \
-  -map 0:a:0 \
-  -c:a libfdk_aac \
-  -profile:a aac_he_v2 \
-  -vbr 5 \
-  -ac 2 \
-  -map 0:s:m:language:eng? \
-  -c:s copy \
-  -map_metadata:g -1 \
-  -map_metadata:s -1 \
-  -metadata source="$source_label" \
-  -metadata:s:a language="$source_audio_language" \
-  -metadata:s:s language=eng \
-  -y "$target_file"
+  "${output_args_array[@]}"
 
 echo
 
