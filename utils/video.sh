@@ -30,19 +30,19 @@ function video_quality {
 
   ffmpeg-quality-metrics "$2" "$1" \
     --progress \
-    -s lanczos \
-    -m vmaf ssim |
-    jq '.global | {
-       vmaf: .vmaf.vmaf,
-       ssim: .ssim.ssim_avg
-    }' >"$output_json"
+    -s spline \
+    -t 4 \
+    -m vmaf >"$output_json"
 
   # ffmpeg-quality-metrics "$2" "$1" \
   #   --progress \
-  #   -s lanczos \
-  #   -m vmaf \
+  #   -s spline \
+  #   -t 4 \
+  #   -m vmaf ssim psnr \
   #   --vmaf-features float_ms_ssim psnr_hvs |
   #   jq '.global | {
+  #      ssim: .ssim.ssim_avg
+  #      psnr: .psnr.psnr_avg
   #      vmaf: .vmaf.vmaf,
   #      ssim: .vmaf.float_ms_ssim,
   #      psnr: .vmaf.psnr_hvs
