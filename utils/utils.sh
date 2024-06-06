@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1090
 
-CURRENT_FILE="${BASH_SOURCE[0]}"
-SHELL_UTILS=$(cd -- "$(dirname -- "$CURRENT_FILE")" &>/dev/null && pwd)
+if [ -z "$SHELL_UTILS" ]; then
+  printf "%s\n" "Error: Shell utils directory is not set. Please set \$SHELL_UTILS before sourcing this file." >&2
+  return 1
+fi
 
 for file in "$SHELL_UTILS"/*.sh; do
-  if [[ $file != "$CURRENT_FILE" && -r $file ]]; then
+  if [[ -r $file && $file != "$SHELL_UTILS"/utils.sh ]]; then
     source "$file"
   fi
 done
