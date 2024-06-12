@@ -109,7 +109,7 @@ fi
 echo
 echo "Transcoding"
 echo
-nice ffmpeg \
+nice ffmpeg-docker \
   -hide_banner -v warning \
   -nostdin -stats \
   -i "$source_file" \

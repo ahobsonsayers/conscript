@@ -150,7 +150,7 @@ array_parse output_args_array "$output_args"
 echo
 echo "Transcoding pass $pass_num"
 echo
-nice ffmpeg \
+nice ffmpeg-docker \
   -hide_banner -v warning \
   -nostdin -stats \
   -i "$source_file" \
