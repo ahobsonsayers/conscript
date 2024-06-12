@@ -45,7 +45,7 @@ fswatch "$input_dir" \
       break
     fi
 
-    if [[ $input_extension == "mkv" || $input_extension == "mp4" ]]; then
+    if [[ $input_extension != "mkv" && $input_extension != "mp4" ]]; then
       echo "$input_name is not an mkv or mp4. Skipping"
       break
     fi
