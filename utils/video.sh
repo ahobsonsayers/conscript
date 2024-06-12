@@ -31,13 +31,11 @@ function video_quality {
   ffmpeg-quality-metrics "$2" "$1" \
     --progress \
     -s spline \
-    -t 4 \
     -m vmaf >"$output_json"
 
   # ffmpeg-quality-metrics "$2" "$1" \
   #   --progress \
   #   -s spline \
-  #   -t 4 \
   #   -m vmaf ssim psnr \
   #   --vmaf-features float_ms_ssim psnr_hvs |
   #   jq '.global | {
