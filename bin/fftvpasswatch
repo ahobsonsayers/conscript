@@ -29,11 +29,11 @@ cd "$root_dir"
 #   http://emcrisostomo.github.io/fswatch/doc/1.11.3/fswatch.html/Invoking-fswatch.html#Event-Flags
 fswatch "$input_dir" \
   --print0 \
-  --event=Created --event=MovedTo --event=Renamed \
-  --exclude=".*" --include="^$input_dir/[^/]*\.mkv$" --include="^$input_dir/[^/]*\.mp4$" |
+  --event=Created --event=MovedTo --event=Renamed |
   while read -r -d "" input_path; do
 
     input_name="$(file_name "$input_path")"
+    input_extension="$(file_extension "$input_path")"
 
     if [ ! -f "$input_path" ]; then
       echo "$input_name does not exist. Skipping"
@@ -42,6 +42,11 @@ fswatch "$input_dir" \
 
     if lsof -Fp "$input_path" &>/dev/null; then
       echo "$input_name is still open. Skipping"
+      break
+    fi
+
+    if [[ $input_extension == "mkv" || $input_extension == "mp4" ]]; then
+      echo "$input_name is not an mkv or mp4. Skipping"
       break
     fi
 
@@ -61,7 +66,8 @@ fswatch "$input_dir" \
     echo "Transcoding $input_name to $output_name"
     echo
 
-    fftv "$input_path" "$output_path" &&
+    fftvpass "$input_path" - &&
+      fftvpass "$input_path" "$output_path" &&
       mv "$input_path" "$complete_dir" ||
       mv "$input_path" "$error_dir"
 
