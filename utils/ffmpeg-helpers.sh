@@ -106,7 +106,7 @@ function ffcropheight() {
   step=$((floored_duration / 11))
 
   for i in $(seq 1 10); do
-    /opt/homebrew/opt/ffmpeg@6/bin/ffmpeg \
+    ffmpeg6-docker \
       -hide_banner \
       -nostdin -stats \
       -ss "$((i * step))" \
