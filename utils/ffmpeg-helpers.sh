@@ -102,7 +102,7 @@ function ffcropheight() {
   local step
 
   duration=$(media_duration_seconds video "$1")
-  floored_duration=$(floor "$duration")
+  floored_duration=$(calc "floor($duration)")
   step=$((floored_duration / 11))
 
   for i in $(seq 1 10); do
