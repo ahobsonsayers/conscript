@@ -50,7 +50,7 @@ function video_quality {
 }
 
 function video_crop_lossless {
-  check_installed ffmpeg
+  check_cmds ffmpeg
 
   if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <output>"

@@ -2,7 +2,7 @@
 
 # Get media duration
 function media_duration {
-  check_installed mediainfo
+  check_cmds mediainfo
 
   if ! {
     [[ $# == 1 ]] ||
@@ -28,7 +28,7 @@ function media_duration {
 
 # Get media duration (in seconds)
 function media_duration_seconds {
-  check_installed mediainfo
+  check_cmds mediainfo
 
   if ! {
     [[ $# == 1 ]] ||

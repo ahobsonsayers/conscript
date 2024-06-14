@@ -2,7 +2,7 @@
 
 # Screenshot
 function ffscreenshot() {
-  check_installed ffmpeg
+  check_cmds ffmpeg
 
   if [[ $# -ne 2 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <timestamp>"
@@ -28,7 +28,7 @@ function ffscreenshot() {
 
 # Cut
 function ffcut() {
-  check_installed ffmpeg
+  check_cmds ffmpeg
 
   if [[ $# -ne 3 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input> <timestamp> <duration>"
@@ -57,7 +57,7 @@ function ffcut() {
 
 # Get video width
 function ffwidth() {
-  check_installed ffmpeg
+  check_cmds ffmpeg
 
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
@@ -74,7 +74,7 @@ function ffwidth() {
 
 # Get video height
 function ffheight() {
-  check_installed ffmpeg
+  check_cmds ffmpeg
 
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
@@ -91,7 +91,7 @@ function ffheight() {
 
 # Get Crop Height
 function ffcropheight() {
-  check_installed ffmpeg
+  check_cmds ffmpeg
 
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
@@ -145,7 +145,7 @@ function ffbitrate() {
 
 # Get video colour information
 function ffcolourinfo() {
-  check_installed ffprobe
+  check_cmds ffprobe
 
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
@@ -205,7 +205,7 @@ function ffcolour() {
 
 # Count BFrames
 function ffbframes() {
-  check_installed ffprobe
+  check_cmds ffprobe
 
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
@@ -220,7 +220,7 @@ function ffbframes() {
 }
 
 function ffstart() {
-  check_installed ffprobe
+  check_cmds ffprobe
 
   if ! {
     [[ $# == 1 ]] ||
@@ -249,7 +249,7 @@ function ffstart() {
 
 # get video encode settings
 function ffsettings() {
-  check_installed mediainfo
+  check_cmds mediainfo
 
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"
@@ -265,7 +265,7 @@ function ffsettings() {
 
 # get video audio language
 function ffaudiolang() {
-  check_installed ffprobe
+  check_cmds ffprobe
 
   if [[ $# -ne 1 ]]; then
     echo "Usage: ${FUNCNAME[0]} <input>"

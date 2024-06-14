@@ -57,7 +57,7 @@ function file_extension() {
   echo "${file_name##*.}"
 }
 
-function check_installed() {
+function check_cmds() {
   local missing=()
   for cmd in "$@"; do
     if ! command -v "$cmd" &>/dev/null; then
