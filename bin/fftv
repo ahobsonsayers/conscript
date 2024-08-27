@@ -109,14 +109,15 @@ fi
 echo
 echo "Transcoding"
 echo
-nice ffmpeg-docker \
+nice ffmpeg \
   -hide_banner -v warning \
   -nostdin -stats \
+  -init_hw_device vulkan:llvmpipe \
   -i "$source_file" \
   -map 0:v:0 \
   -c:v libx265 \
   -profile:v main10 \
-  -b:v 900k \
+  -crf:v 24 \
   -preset:v slower \
   -vf "
     $crop_params,

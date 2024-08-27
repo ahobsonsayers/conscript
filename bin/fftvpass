@@ -107,8 +107,6 @@ if [[ $target_file == "-" ]]; then
   pass_num=1
   pass_params="
     pass=1:
-    analysis-save=$analysis_file:
-    analysis-save-reuse-level=10
   "
   output_args="
     -an
@@ -120,8 +118,6 @@ elif [[ $target_extension == "mkv" ]]; then
   pass_num=2
   pass_params="
     pass=2:
-    analysis-load=$analysis_file:
-    analysis-load-reuse-level=10
   "
   output_args="
     -map 0:a:0 \
@@ -150,9 +146,10 @@ array_parse output_args_array "$output_args"
 echo
 echo "Transcoding pass $pass_num"
 echo
-nice ffmpeg-docker \
+nice ffmpeg \
   -hide_banner -v warning \
   -nostdin -stats \
+  -init_hw_device vulkan:llvmpipe \
   -i "$source_file" \
   -map 0:v:0 \
   -c:v libx265 \

@@ -1,19 +1,18 @@
 class Ffmpeg < Formula
   desc "Play, record, convert, and stream audio and video"
   homepage "https://ffmpeg.org/"
-  url "https://ffmpeg.org/releases/ffmpeg-6.1.tar.xz"
-  version "6.1-with-options" # to distinguish from homebrew-core's ffmpeg
-  sha256 "488c76e57dd9b3bee901f71d5c95eaf1db4a5a31fe46a28654e837144207c270"
+  url "https://ffmpeg.org/releases/ffmpeg-7.0.1.tar.xz"
+  version "7.0.1-with-options" # to distinguish from homebrew-core's ffmpeg
+  sha256 "bce9eeb0f17ef8982390b1f37711a61b4290dc8c2a0c1a37b5857e85bfb0e4ff"
   license "GPL-2.0-or-later"
-  revision 3
   head "https://github.com/FFmpeg/FFmpeg.git", branch: "master"
 
   option "with-chromaprint", "Enable the Chromaprint audio fingerprinting library"
   option "with-decklink", "Enable DeckLink support"
+  option "with-dvd", "Enable DVD-Video demuxer, powered by libdvdnav and libdvdread"
   option "with-fdk-aac", "Enable the Fraunhofer FDK AAC library"
   option "with-libflite", "Enable text to speech synthesis support via Flite"
   option "with-game-music-emu", "Enable Game Music Emu (GME) support"
-  option "with-harfbuzz", "Enable OpenType text shaping engine"
   option "with-jack", "Enable Jack support"
   option "with-jpeg-xl", "Enable JPEG XL image format"
   option "with-libaribb24", "Enable decoding ARIB/ISDB captions"
@@ -53,10 +52,13 @@ class Ffmpeg < Formula
   depends_on "fontconfig"
   depends_on "freetype"
   depends_on "frei0r"
+  depends_on "harfbuzz"
   depends_on "lame"
   depends_on "libass"
   depends_on "libvorbis"
   depends_on "libvpx"
+  depends_on "libx11"
+  depends_on "libxcb"
   depends_on "opus"
   depends_on "sdl2"
   depends_on "snappy"
@@ -69,13 +71,14 @@ class Ffmpeg < Formula
   depends_on "chromaprint" => :optional
   depends_on "fdk-aac" => :optional
   depends_on "game-music-emu" => :optional
-  depends_on "harfbuzz" => :optional
   depends_on "jack" => :optional
   depends_on "jpeg-xl" => :optional
   depends_on "libaribcaption" => :optional
   depends_on "libbluray" => :optional
   depends_on "libbs2b" => :optional
   depends_on "libcaca" => :optional
+  depends_on "libdvdnav" => :optional
+  depends_on "libdvdread" => :optional
   depends_on "libgsm" => :optional
   depends_on "libmodplug" => :optional
   depends_on "libopenmpt" => :optional
@@ -90,7 +93,7 @@ class Ffmpeg < Formula
   depends_on "opencore-amr" => :optional
   depends_on "openh264" => :optional
   depends_on "openjpeg" => :optional
-  depends_on "openssl@1.1" => :optional
+  depends_on "openssl" => :optional
   depends_on "openvino" => :optional
   depends_on "rav1e" => :optional
   depends_on "rtmpdump" => :optional
@@ -108,8 +111,15 @@ class Ffmpeg < Formula
   uses_from_macos "bzip2"
   uses_from_macos "zlib"
 
+  on_macos do
+    depends_on "libarchive"
+    depends_on "libogg"
+    depends_on "libsamplerate"
+  end
+
   on_linux do
     depends_on "alsa-lib"
+    depends_on "libdrm"
     depends_on "libxv"
   end
 
@@ -127,9 +137,6 @@ class Ffmpeg < Formula
   end
 
   def install
-    # The new linker leads to duplicate symbol issue https://github.com/homebrew-ffmpeg/homebrew-ffmpeg/issues/140
-    ENV.append "LDFLAGS", "-Wl,-ld_classic" if DevelopmentTools.clang_build_version >= 1500
-
     args = %W[
       --prefix=#{prefix}
       --enable-shared
@@ -139,6 +146,7 @@ class Ffmpeg < Formula
       --enable-gpl
       --enable-libaom
       --enable-libdav1d
+      --enable-libharfbuzz
       --enable-libmp3lame
       --enable-libopus
       --enable-libsnappy
@@ -172,13 +180,11 @@ class Ffmpeg < Formula
     args << "--enable-libflite" if build.with? "libflite"
     args << "--enable-libgme" if build.with? "game-music-emu"
     args << "--enable-libgsm" if build.with? "libgsm"
-    args << "--enable-libharfbuzz" if build.with? "harfbuzz"
     args << "--enable-libjxl" if build.with? "jpeg-xl"
     args << "--enable-libmodplug" if build.with? "libmodplug"
     args << "--enable-libopenh264" if build.with? "openh264"
     args << "--enable-libopenjpeg" if build.with? "openjpeg"
     args << "--enable-libopenmpt" if build.with? "libopenmpt"
-    args << "--enable-openvino" if build.with? "openvino"
     args << "--enable-librav1e" if build.with? "rav1e"
     args << "--enable-libsvtav1" if build.with? "svt-av1"
     args << "--enable-librist" if build.with? "librist"
@@ -199,6 +205,7 @@ class Ffmpeg < Formula
     args << "--enable-libzimg" if build.with? "zimg"
     args << "--enable-libzmq" if build.with? "zeromq"
     args << "--enable-openssl" if build.with? "openssl"
+    args << "--enable-openvino" if build.with? "openvino"
 
     # These librares are GPL-incompatible, and require ffmpeg be built with
     # the "--enable-nonfree" flag, which produces unredistributable libraries
@@ -209,6 +216,11 @@ class Ffmpeg < Formula
       args << "--extra-cflags=-I#{HOMEBREW_PREFIX}/include"
       args << "--extra-ldflags=-L#{HOMEBREW_PREFIX}/include"
       mv "VERSION", "VERSION.txt"
+    end
+
+    if build.with? "dvd"
+      args << "--enable-libdvdnav"
+      args << "--enable-libdvdread"
     end
 
     if build.with? "jack"

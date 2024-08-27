@@ -30,8 +30,13 @@ function video_quality {
 
   ffmpeg-quality-metrics "$2" "$1" \
     --progress \
-    -s spline \
-    -m vmaf >"$output_json"
+    -s lanczos \
+    -m vmaf \
+    --vmaf-features float_ms_ssim |
+    jq '.global | {
+    	ssim: .vmaf.float_ms_ssim,
+    	vmaf: .vmaf.vmaf
+    }' >"$output_json"
 
   # ffmpeg-quality-metrics "$2" "$1" \
   #   --progress \
