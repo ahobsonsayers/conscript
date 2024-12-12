@@ -36,22 +36,24 @@ pipx_install() {
   pipx upgrade "$PACKAGE" -q --include-injected
 }
 
-pipx_install "$PACKAGE" gfpgan realesrgan rembg
+pipx_install "$PACKAGE" gfpgan onnxruntime realesrgan rembg
 
 iopaint start \
   --port 1111 \
   --inbrowser \
-  --device mps \
+  --model-dir ~/.cache \
   --model lama \
-  --model-dir ~/models \
+  --disable-nsfw-checker \
   --enable-interactive-seg \
-  --interactive-seg-device mps \
   --enable-remove-bg \
   --enable-realesrgan \
-  --realesrgan-device mps \
   --enable-gfpgan \
-  --gfpgan-device mps \
   --enable-restoreformer \
+  --remove-bg-model briaai/RMBG-2.0 \
+  --device mps \
+  --interactive-seg-device mps \
+  --remove-bg-device mps \
+  --realesrgan-device mps \
+  --gfpgan-device mps \
   --restoreformer-device mps \
-  --disable-nsfw-checker \
   "$@"
