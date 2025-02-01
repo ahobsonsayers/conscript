@@ -23,7 +23,7 @@ function ffscreenshot() {
     -i "$1" \
     -frames:v 1 \
     -update 1 \
-    "${directory}/${file_label}.png"
+    -y "${directory}/${file_label}.png"
 }
 
 # Cut
